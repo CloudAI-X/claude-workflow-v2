@@ -578,6 +578,10 @@ Contributions welcome! See [CONTRIBUTING.md](./CONTRIBUTING.md).
 
 [![Star History Chart](https://api.star-history.com/svg?repos=CloudAI-X/claude-workflow-v2&type=date&legend=top-left)](https://www.star-history.com/#CloudAI-X/claude-workflow-v2&type=date&legend=top-left)
 
+## Related Tools
+
+- [claude-dash](https://github.com/krabat-l/claude-dash) — Real-time statusline for Claude Code showing context, cost, quota, cache, tools, and git status
+
 ## Credits
 
 - Plugin created by [@cloudxdev](https://x.com/cloudxdev)
