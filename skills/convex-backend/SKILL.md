@@ -114,6 +114,3 @@ await ctx.db
 5. **Actions cannot access `ctx.db`** - use runQuery/runMutation instead
 6. **Include type annotations** when calling functions in same file
 
-## Full Compiled Document
-
-For the complete guide with all rules and detailed code examples, see: `AGENTS.md`

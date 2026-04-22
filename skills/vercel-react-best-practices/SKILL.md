@@ -106,9 +106,7 @@ Reference these guidelines when:
 - `advanced-event-handler-refs` - Store event handlers in refs
 - `advanced-use-latest` - useLatest for stable callback refs
 
-## Full Compiled Document
-
-For the complete guide with all rules expanded and detailed code examples, see: `AGENTS.md`
+## Rule Structure
 
 Each rule contains:
 
