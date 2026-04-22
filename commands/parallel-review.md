@@ -1,4 +1,5 @@
 ---
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task
 description: Run parallel code review across multiple directories or files. Uses N subagents simultaneously for faster analysis.
 argument-hint: <directories or files to review in parallel, e.g., "src/auth src/api src/db">
 ---
