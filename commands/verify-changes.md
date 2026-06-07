@@ -1,4 +1,5 @@
 ---
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task
 description: Comprehensive verification after code changes. Uses Boris Cherny's multi-subagent adversarial approach.
 ---
 

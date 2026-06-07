@@ -1,4 +1,5 @@
 ---
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, Task
 description: Multi-perspective analysis using parallel subagents. Analyzes code from architecture, security, performance, and testing viewpoints simultaneously.
 argument-hint: <file or directory to analyze, e.g., "src/api">
 ---
