@@ -437,7 +437,7 @@ Create `.md` files in `commands/`:
 ---
 allowed-tools: Bash(git:*), Read, Write
 description: What this command does
-argument-hint: [optional arguments]
+argument-hint: "[optional arguments]"
 ---
 
 [Command instructions here]

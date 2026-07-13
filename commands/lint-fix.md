@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash(npm:*), Bash(npx:*), Bash(yarn:*), Bash(pnpm:*), Bash(bun:*), Bash(python:*), Bash(go:*), Bash(cargo:*)
 description: Auto-fix all linting and formatting issues
-argument-hint: [optional file or directory path]
+argument-hint: "[optional file or directory path]"
 ---
 
 ## Context

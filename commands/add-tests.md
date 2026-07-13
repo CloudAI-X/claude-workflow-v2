@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash(git:*), Bash(npm:*), Bash(npx:*), Bash(yarn:*), Bash(bun:*), Bash(pytest:*), Bash(go:*), Read, Write
 description: Add tests for recently changed files or specified code
-argument-hint: [file path or function name]
+argument-hint: "[file path or function name]"
 ---
 
 ## Context

@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash(git:*), Bash(npm:*), Bash(npx:*), Bash(yarn:*), Bash(pnpm:*), Bash(bun:*), Bash(pip:*), Bash(uv:*), Bash(python:*), Bash(cargo:*), Bash(go:*), Read, Edit, WebFetch
 description: Safe, one-at-a-time dependency upgrades with verification after each. Detects package manager automatically.
-argument-hint: [specific package name, or blank for all outdated]
+argument-hint: "[specific package name, or blank for all outdated]"
 ---
 
 # Dependency Upgrade
