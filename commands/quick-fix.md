@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash(npm:*), Bash(npx:*), Bash(yarn:*), Bash(pnpm:*), Bash(bun:*), Bash(python:*), Bash(pip:*), Bash(go:*), Read, Edit, Write
 description: Quickly fix lint errors, type errors, or simple bugs
-argument-hint: [file or error description]
+argument-hint: "[file or error description]"
 ---
 
 ## Context
