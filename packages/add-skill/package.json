@@ -37,6 +37,6 @@
     "node": ">=16.0.0"
   },
   "dependencies": {
-    "degit": "^2.8.4"
+    "degit": "^3.8.0"
   }
 }
