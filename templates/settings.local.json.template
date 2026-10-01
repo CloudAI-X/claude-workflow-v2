@@ -86,18 +86,5 @@
       "Bash(curl:*)",
       "Bash(wget:*)"
     ]
-  },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit|Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "npx prettier --write $CLAUDE_FILE_PATH 2>/dev/null || black $CLAUDE_FILE_PATH 2>/dev/null || true"
-          }
-        ]
-      }
-    ]
   }
 }

@@ -1,66 +1,45 @@
 {
-  "$schema": "https://code.claude.com/schemas/mcp.json",
-  "$comment": "MCP server configurations. Copy to .mcp.json in your project root. Team-shared file checked into git.",
+  "$comment": "MCP server configurations. Copy to .mcp.json in your project root and delete the servers you don't need. Team-shared file checked into git. Remote (http) servers sign in through /mcp inside Claude Code, so no tokens are stored here.",
   "mcpServers": {
-    "slack": {
-      "$comment": "Slack integration - search channels, post messages, read threads",
-      "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-server-slack"],
-      "env": {
-        "SLACK_BOT_TOKEN": "${SLACK_BOT_TOKEN}",
-        "SLACK_TEAM_ID": "${SLACK_TEAM_ID}"
-      }
-    },
     "github": {
       "$comment": "GitHub integration - PRs, issues, code search",
-      "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-server-github"],
-      "env": {
-        "GITHUB_TOKEN": "${GITHUB_TOKEN}"
-      }
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "slack": {
+      "$comment": "Slack integration - search channels, post messages, read threads",
+      "type": "http",
+      "url": "https://mcp.slack.com/mcp"
+    },
+    "sentry": {
+      "$comment": "Sentry error tracking - fetch errors, stack traces",
+      "type": "http",
+      "url": "https://mcp.sentry.dev/mcp"
+    },
+    "linear": {
+      "$comment": "Linear issue tracking - create/update issues, view sprints",
+      "type": "http",
+      "url": "https://mcp.linear.app/mcp"
+    },
+    "notion": {
+      "$comment": "Notion workspace - search pages, read/write content",
+      "type": "http",
+      "url": "https://mcp.notion.com/mcp"
     },
     "filesystem": {
       "$comment": "Extended filesystem access beyond working directory",
       "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-server-filesystem", "/path/to/allowed/directory"]
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed/directory"]
     },
     "memory": {
       "$comment": "Persistent memory across sessions",
       "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-server-memory"]
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
     },
     "postgres": {
-      "$comment": "PostgreSQL database queries",
+      "$comment": "PostgreSQL database queries (read DATABASE_URL from your environment)",
       "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-server-postgres"],
-      "env": {
-        "DATABASE_URL": "${DATABASE_URL}"
-      }
-    },
-    "sentry": {
-      "$comment": "Sentry error tracking - fetch errors, stack traces",
-      "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-server-sentry"],
-      "env": {
-        "SENTRY_AUTH_TOKEN": "${SENTRY_AUTH_TOKEN}",
-        "SENTRY_ORG": "${SENTRY_ORG}"
-      }
-    },
-    "linear": {
-      "$comment": "Linear issue tracking - create/update issues, view sprints",
-      "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-server-linear"],
-      "env": {
-        "LINEAR_API_KEY": "${LINEAR_API_KEY}"
-      }
-    },
-    "notion": {
-      "$comment": "Notion workspace - search pages, read/write content",
-      "command": "npx",
-      "args": ["-y", "@anthropic-ai/mcp-server-notion"],
-      "env": {
-        "NOTION_API_KEY": "${NOTION_API_KEY}"
-      }
+      "args": ["-y", "@bytebase/dbhub", "--dsn", "${DATABASE_URL}"]
     }
   }
 }
