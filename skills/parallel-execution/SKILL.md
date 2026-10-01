@@ -1,6 +1,6 @@
 ---
 name: parallel-execution
-description: Patterns for parallel subagent execution using Task tool with run_in_background. Use when coordinating multiple independent tasks, spawning dynamic subagents, or implementing features that can be parallelized.
+description: Patterns for parallel subagent execution using the Agent tool (formerly Task). Use when coordinating multiple independent tasks, spawning dynamic subagents, or implementing features that can be parallelized.
 ---
 
 # Parallel Execution Patterns
@@ -12,9 +12,9 @@ description: Patterns for parallel subagent execution using Task tool with run_i
 
 ## Core Concept
 
-Parallel execution spawns multiple subagents simultaneously using the Task tool with `run_in_background: true`. This enables N tasks to run concurrently, dramatically reducing total execution time.
+Parallel execution spawns multiple subagents simultaneously using the Agent tool (named `Task` before Claude Code 2.1.63; `Task` still works as an alias). Subagents run in the background by default, so N tasks run concurrently, dramatically reducing total execution time.
 
-**Critical Rule**: ALL Task calls MUST be in a SINGLE assistant message for true parallelism. If Task calls are in separate messages, they run sequentially.
+**Critical Rule**: ALL Agent calls MUST be in a SINGLE assistant message for true parallelism. If the calls are in separate messages, they launch one after another.
 
 ## Execution Protocol
 
@@ -51,38 +51,29 @@ Focus areas:
 
 ### Step 3: Launch All Tasks in ONE Message
 
-**CRITICAL**: Make ALL Task calls in the SAME assistant message:
+**CRITICAL**: Make ALL Agent calls in the SAME assistant message:
 
 ```
 I'm launching N parallel subagents:
 
-[Task 1]
+[Agent 1]
 description: "Subagent A - [brief purpose]"
 prompt: "[detailed instructions for subagent A]"
-run_in_background: true
 
-[Task 2]
+[Agent 2]
 description: "Subagent B - [brief purpose]"
 prompt: "[detailed instructions for subagent B]"
-run_in_background: true
 
-[Task 3]
+[Agent 3]
 description: "Subagent C - [brief purpose]"
 prompt: "[detailed instructions for subagent C]"
-run_in_background: true
 ```
 
-### Step 4: Retrieve Results with TaskOutput
+On Claude Code versions that still run subagents in the foreground by default, add `run_in_background: true` to each call.
 
-After launching, retrieve each result:
+### Step 4: Collect Results
 
-```
-[Wait for completion, then retrieve]
-
-TaskOutput: task_1_id
-TaskOutput: task_2_id
-TaskOutput: task_3_id
-```
+Each subagent returns its final result to the parent conversation automatically when it finishes. Wait until every subagent has reported before synthesizing; do not poll, and do not start dependent work early. (The separate `TaskOutput` call is deprecated.)
 
 ### Step 5: Synthesize Results
 
@@ -107,10 +98,12 @@ Plan:
 4. Write unit tests
 5. Update documentation
 
-Spawn 5 subagents (one per task):
+Wave 1 - spawn 3 subagents (independent of each other):
 - Subagent 1: Implements auth module
 - Subagent 2: Creates API endpoints
 - Subagent 3: Adds database schema
+
+Wave 2 - after wave 1 has finished (these depend on its output):
 - Subagent 4: Writes unit tests
 - Subagent 5: Updates documentation
 ```
@@ -142,9 +135,9 @@ Spawn 4 subagents:
 - Subagent 4: Architecture assessment
 ```
 
-## TodoWrite Integration
+## Task List Integration
 
-When using parallel execution, TodoWrite behavior differs:
+When using parallel execution, task tracking (`TaskCreate`/`TaskUpdate`, or `TodoWrite` on older versions) differs:
 
 **Sequential execution**: Only ONE task `in_progress` at a time
 **Parallel execution**: MULTIPLE tasks can be `in_progress` simultaneously
@@ -158,7 +151,7 @@ todos = [
   { content: "Synthesize results", status: "pending" }
 ]
 
-# After each TaskOutput retrieval, mark as completed
+# As each subagent reports back, mark its task completed
 todos = [
   { content: "Task A", status: "completed" },
   { content: "Task B", status: "completed" },
@@ -208,17 +201,18 @@ Parallel execution is approximately Nx faster where N is the number of independe
 **Parallel execution**:
 
 ```
-Launching 5 subagents in parallel:
+Wave 1 - launching 4 subagents in parallel:
 
-[Task 1] Login endpoint implementation
-[Task 2] Registration endpoint implementation
-[Task 3] Password reset endpoint implementation
-[Task 4] Auth middleware implementation
-[Task 5] Integration test writing
+[Agent 1] Login endpoint implementation
+[Agent 2] Registration endpoint implementation
+[Agent 3] Password reset endpoint implementation
+[Agent 4] Auth middleware implementation
 
-All tasks run simultaneously...
+[Results arrive as each subagent finishes]
 
-[Collect results via TaskOutput]
+Wave 2 - depends on wave 1:
+
+[Agent 5] Integration test writing
 
 [Synthesize into cohesive implementation]
 ```
@@ -227,13 +221,13 @@ All tasks run simultaneously...
 
 **Tasks running sequentially?**
 
-- Verify ALL Task calls are in SINGLE message
-- Check `run_in_background: true` is set for each
+- Verify ALL Agent calls are in a SINGLE message
+- On older Claude Code versions, check `run_in_background: true` is set for each
 
 **Results not available?**
 
-- Use TaskOutput with correct task IDs
-- Wait for tasks to complete before retrieving
+- Results are delivered when each subagent finishes; wait for all of them
+- A subagent that was denied a permission may return without finishing its work; check its report
 
 **Conflicts in output?**
 

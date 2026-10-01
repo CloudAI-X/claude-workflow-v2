@@ -88,6 +88,9 @@ BEGIN
   RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER comments_count AFTER INSERT OR DELETE ON comments
+  FOR EACH ROW EXECUTE FUNCTION update_comment_count();
 ```
 
 ## Indexing Strategy
@@ -206,8 +209,8 @@ SELECT * FROM posts ORDER BY created_at DESC LIMIT 20 OFFSET 10000;
 
 -- CORRECT: Cursor-based pagination (keyset)
 SELECT * FROM posts
-WHERE created_at < '2024-01-15T10:30:00Z'
-ORDER BY created_at DESC
+WHERE (created_at, id) < ('2024-01-15T10:30:00Z', 12345)
+ORDER BY created_at DESC, id DESC
 LIMIT 20;
 ```
 
@@ -226,13 +229,14 @@ LIMIT 20;
 ### Zero-Downtime Migration Example
 
 ```sql
--- Step 1: Add new column (safe, no lock)
+-- Step 1: Add new column (brief ACCESS EXCLUSIVE lock — set lock_timeout and retry)
 ALTER TABLE users ADD COLUMN display_name TEXT;
 
--- Step 2: Backfill data (do in batches)
+-- Step 2: Deploy code that writes to BOTH columns
+
+-- Step 3: Backfill existing rows (do in batches)
 UPDATE users SET display_name = name WHERE display_name IS NULL AND id BETWEEN 1 AND 10000;
 
--- Step 3: Deploy code that writes to BOTH columns
 -- Step 4: Deploy code that reads from new column
 -- Step 5: Drop old column (after confirming no reads)
 ALTER TABLE users DROP COLUMN name;
@@ -246,6 +250,8 @@ CREATE INDEX idx_orders_user ON orders (user_id);
 
 -- CORRECT: Non-blocking (PostgreSQL)
 CREATE INDEX CONCURRENTLY idx_orders_user ON orders (user_id);
+-- Cannot run inside a transaction block: most migration tools wrap migrations
+-- in one, so disable the transaction for this migration
 ```
 
 ## Connection Pooling
@@ -322,10 +328,9 @@ for (const item of items) {
 await prisma.item.createMany({ data: items });
 
 // CORRECT: Transaction for dependent operations
-await prisma.$transaction([
-  prisma.user.create({ data: userData }),
-  prisma.profile.create({ data: profileData }),
-]);
+await prisma.user.create({
+  data: { ...userData, profile: { create: profileData } },
+});
 ```
 
 ## NoSQL Design Patterns
@@ -352,8 +357,8 @@ await prisma.$transaction([
 }
 
 // CORRECT: Reference unbounded or independent data
-// user: { _id, name, orderIds: [ObjectId("...")] }
-// orders: { _id, userId, items: [...], total: 99.99 }
+// user: { _id, name }
+// orders: { _id, userId, items: [...], total: 99.99 }  // index orders.userId
 ```
 
 ### Key-Value / Redis Patterns

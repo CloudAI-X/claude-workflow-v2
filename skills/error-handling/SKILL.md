@@ -74,7 +74,7 @@ try {
   if (error instanceof ValidationError) {
     return res.status(400).json({ errors: error.errors });
   }
-  logger.error("Failed to save user", { error, userId: data.id });
+  logger.error({ err: error, userId: data.id }, "Failed to save user");
   throw new AppError("Unable to save user", 500, "USER_SAVE_FAILED");
 }
 ```
@@ -85,22 +85,17 @@ try {
 // Centralized error handler middleware (must have 4 params)
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   if (err instanceof AppError) {
-    logger.warn("Operational error", {
-      code: err.code,
-      statusCode: err.statusCode,
-      path: req.path,
-    });
+    logger.warn(
+      { code: err.code, statusCode: err.statusCode, path: req.path },
+      "Operational error",
+    );
     return res.status(err.statusCode).json({
       error: { code: err.code, message: err.message },
     });
   }
 
   // Unexpected errors -- these are bugs
-  logger.error("Unexpected error", {
-    error: err.message,
-    stack: err.stack,
-    path: req.path,
-  });
+  logger.error({ err, path: req.path }, "Unexpected error");
   res.status(500).json({
     error: { code: "INTERNAL_ERROR", message: "An unexpected error occurred" },
   });
@@ -273,10 +268,10 @@ class ErrorBoundary extends React.Component<
     return { hasError: true, error };
   }
   componentDidCatch(error: Error, info: React.ErrorInfo) {
-    logger.error("React error boundary caught error", {
-      error: error.message,
-      componentStack: info.componentStack,
-    });
+    logger.error(
+      { err: error, componentStack: info.componentStack },
+      "React error boundary caught error",
+    );
   }
   render() {
     return this.state.hasError ? this.props.fallback : this.props.children;
@@ -300,10 +295,10 @@ async function getProductRecommendations(userId: string) {
   try {
     return await recommendationService.get(userId);
   } catch (error) {
-    logger.warn("Recommendation service unavailable, using fallback", {
-      userId,
-      error: error.message,
-    });
+    logger.warn(
+      { userId, err: error },
+      "Recommendation service unavailable, using fallback",
+    );
     return getCachedRecommendations(userId) || getDefaultRecommendations();
   }
 }
@@ -340,7 +335,7 @@ async function withRetry<T>(
         baseDelay * 2 ** attempt + Math.random() * 1000,
         maxDelay,
       );
-      logger.warn("Retrying operation", { attempt: attempt + 1, delay });
+      logger.warn({ attempt: attempt + 1, delay }, "Retrying operation");
       await new Promise((r) => setTimeout(r, delay));
     }
   }
@@ -348,9 +343,18 @@ async function withRetry<T>(
 }
 
 // Usage: retry only on transient errors
-const data = await withRetry(() => fetch("https://api.example.com/data"), {
-  retryOn: (err) => err.message.includes("ECONNRESET"),
-});
+const data = await withRetry(
+  async () => {
+    const res = await fetch("https://api.example.com/data");
+    if (res.status >= 500 || res.status === 429)
+      throw new Error(`HTTP ${res.status}`);
+    return res;
+  },
+  {
+    retryOn: (err) =>
+      err instanceof TypeError || err.message.startsWith("HTTP "),
+  },
+);
 ```
 
 ### Circuit Breaker
@@ -452,11 +456,7 @@ res.status(500).json({
 });
 
 // CORRECT: Generic message to user, full details in logs
-logger.error("Database query failed", {
-  error: error.message,
-  stack: error.stack,
-  query,
-});
+logger.error({ err: error, query }, "Database query failed");
 res.status(500).json(toUserResponse(new AppError("DB error", 500)));
 ```
 

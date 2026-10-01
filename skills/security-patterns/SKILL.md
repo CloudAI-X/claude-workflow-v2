@@ -68,7 +68,9 @@ function authenticate(req: Request, res: Response, next: NextFunction) {
 
   try {
     const token = header.slice(7);
-    const payload = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    const payload = jwt.verify(token, process.env.JWT_SECRET!, {
+      algorithms: ["HS256"], // pin: never let the token choose its algorithm
+    }) as JwtPayload;
     req.user = { id: payload.sub, role: payload.role };
     next();
   } catch (err) {
@@ -84,7 +86,7 @@ function authenticate(req: Request, res: Response, next: NextFunction) {
 
 ```typescript
 import session from "express-session";
-import RedisStore from "connect-redis";
+import { RedisStore } from "connect-redis";
 
 app.use(
   session({
@@ -105,13 +107,14 @@ app.use(
 ### OAuth 2.0 / OIDC Flow Summary
 
 ```
-Authorization Code Flow (web apps with backend):
+Authorization Code Flow with PKCE (all clients):
 1. Redirect to provider: /authorize?response_type=code&client_id=...&redirect_uri=...&scope=openid email
-2. User authenticates, provider redirects back with ?code=AUTHORIZATION_CODE
-3. Backend exchanges code for tokens (POST /token with client_secret)
-4. Backend receives access_token + id_token, creates session/JWT
+   &state=RANDOM&nonce=RANDOM&code_challenge=...&code_challenge_method=S256
+2. User authenticates, provider redirects back with ?code=AUTHORIZATION_CODE&state=... (reject if state differs)
+3. Backend exchanges code for tokens (POST /token with code_verifier, plus client_secret for confidential clients)
+4. Backend validates the id_token (signature, iss, aud, exp, nonce), then creates session/JWT
 
-PKCE Flow (SPAs, mobile): Same but with code_verifier/code_challenge instead of client_secret
+Public clients (SPAs, mobile): same flow without client_secret
 NEVER use Implicit Flow (deprecated, tokens exposed in URL)
 ```
 
@@ -189,7 +192,13 @@ app.put(
         .status(403)
         .json({ error: "Not authorized to edit this post" });
     }
-    await db.post.update({ where: { id: req.params.id }, data: req.body });
+    // WRONG: data: req.body -- mass assignment lets the client overwrite authorId
+    const { title, body } = UpdatePostSchema.parse(req.body); // allowlisted fields only
+    const updated = await db.post.update({
+      where: { id: post.id },
+      data: { title, body },
+    });
+    res.json(updated);
   },
 );
 ```
@@ -218,8 +227,10 @@ await db.user.create({
 });
 
 // Login -- WRONG: "Invalid password" (reveals email exists) | CORRECT: generic message
+// Always run bcrypt, even for unknown emails, or response time reveals which emails exist
 const user = await db.user.findUnique({ where: { email } });
-if (!user || !(await verifyPassword(req.body.password, user.password))) {
+const hash = user?.password ?? DUMMY_HASH; // bcrypt hash of a random string, created at startup
+if (!(await verifyPassword(req.body.password, hash)) || !user) {
   return res.status(401).json({ error: "Invalid email or password" });
 }
 ```
@@ -230,7 +241,7 @@ if (!user || !(await verifyPassword(req.body.password, user.password))) {
 function validatePassword(password: string): string[] {
   const errors: string[] = [];
   if (password.length < 12) errors.push("Minimum 12 characters");
-  if (password.length > 128) errors.push("Maximum 128 characters");
+  if (Buffer.byteLength(password) > 72) errors.push("Maximum 72 bytes"); // bcrypt ignores the rest
 
   // Check against breached password lists (haveibeenpwned API or local)
   // Do NOT enforce arbitrary complexity rules (uppercase + number + symbol)
@@ -372,14 +383,14 @@ app.use(
 ## Rate Limiting
 
 ```typescript
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import RedisStore from "rate-limit-redis";
 
 // Global rate limit
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // 100 requests per window
+    limit: 100, // 100 requests per window
     standardHeaders: true, // RateLimit-* headers
     legacyHeaders: false,
     store: new RedisStore({
@@ -393,7 +404,7 @@ app.use(
   "/api/auth/login",
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 5, // 5 login attempts per 15 min
+    limit: 5, // 5 login attempts per 15 min
     message: { error: "Too many login attempts. Try again later." },
   }),
 );
@@ -403,8 +414,8 @@ app.use(
   "/api/v1/",
   rateLimit({
     windowMs: 60 * 1000, // 1 minute
-    max: 60, // 60 requests per minute
-    keyGenerator: (req) => req.apiClient?.id || req.ip,
+    limit: 60, // 60 requests per minute
+    keyGenerator: (req) => req.apiClient?.id ?? ipKeyGenerator(req.ip),
   }),
 );
 ```
@@ -418,8 +429,8 @@ app.use(helmet()); // Sets many secure headers at once
 
 // Key headers helmet sets:
 // X-Content-Type-Options: nosniff
-// X-Frame-Options: DENY
-// Strict-Transport-Security: max-age=15552000; includeSubDomains
+// X-Frame-Options: SAMEORIGIN
+// Strict-Transport-Security: max-age=31536000; includeSubDomains
 // Content-Security-Policy: default-src 'self'
 
 // Customize CSP for your app
@@ -449,7 +460,7 @@ app.post("/api/users", (req, res) => {
 // CORRECT: Validate with schema, use parameterized queries
 const CreateUserSchema = z.object({
   email: z.string().email().max(255),
-  name: z.string().min(1).max(100).trim(),
+  name: z.string().trim().min(1).max(100),
   age: z.number().int().min(13).max(150).optional(),
 });
 

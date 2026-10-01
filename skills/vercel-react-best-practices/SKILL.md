@@ -10,7 +10,7 @@ description: React and Next.js performance optimization guidelines from Vercel E
 - **Trigger**: React or Next.js development, component writing, data fetching patterns, bundle optimization
 - **Skip**: Project does not use React or Next.js
 
-Comprehensive performance optimization guide for React and Next.js applications, maintained by Vercel. Contains 45 rules across 8 categories, prioritized by impact to guide automated refactoring and code generation.
+Comprehensive performance optimization guide for React and Next.js applications, maintained by Vercel. Contains 47 rules across 8 categories, prioritized by impact to guide automated refactoring and code generation.
 
 ## When to Apply
 
