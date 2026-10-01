@@ -4,7 +4,7 @@
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-v1.0.33+-blue.svg)](https://code.claude.com)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/CloudAI-X/claude-workflow-v2/pulls)
 
-A universal Claude Code workflow plugin with specialized agents, skills, hooks, and output styles for any software project. Compatible with [skills.sh](https://skills.sh) — works with Claude Code, Cursor, Codex, and 35+ AI agents.
+A universal Claude Code workflow plugin with specialized agents, skills, hooks, and mode commands for any software project. Compatible with [skills.sh](https://skills.sh) — works with Claude Code, Cursor, Codex, and 35+ AI agents.
 
 ---
 
@@ -24,7 +24,7 @@ Installs skills to Claude Code, Cursor, Codex, Windsurf, Cline, and 35+ other AI
 npx install-claude-workflow-v2@latest
 ```
 
-Installs the complete plugin: agents, commands, skills, and hooks.
+Copies agents, commands, skills and hook scripts into `.claude/` and registers the hooks in `.claude/settings.json` (existing files and settings are kept). Two differences from a plugin install: commands are not namespaced (`/commit` instead of `/project-starter:commit`), and `permissionMode: acceptEdits` on the debugger, docs-writer, refactorer and test-architect agents takes effect (Claude Code ignores that field for plugin agents).
 
 ### Option 3: CLI (Per-Session)
 
@@ -54,11 +54,9 @@ for await (const message of query({
 ### Option 5: Install Permanently
 
 ```bash
-# Install from marketplace (when available)
-claude plugin install project-starter
-
-# Or install from local directory
-claude plugin install ./claude-workflow-v2
+# Add this repository as a marketplace, then install the plugin from it
+claude plugin marketplace add CloudAI-X/claude-workflow-v2
+claude plugin install project-starter@claude-workflow
 ```
 
 ### Verify Installation
@@ -159,7 +157,7 @@ Agents spawn automatically based on your request:
 ```
 [orchestrator agent activated]
 → Breaking down into subtasks:
-  1. Design auth schema (spawning architect)
+  1. Design auth schema (applying the designing-architecture skill)
   2. Implement JWT middleware
   3. Add login/register endpoints
   4. Write tests (spawning test-architect)
@@ -195,19 +193,13 @@ Hooks run automatically on events:
 **Security block (pre-edit):**
 
 ```
-⛔ BLOCKED: Potential secret detected
-   File: src/config.ts, Line 5
-   Pattern: API key (sk-...)
-
-   Remove the secret and use environment variables.
+🚫 BLOCKED - Security issue detected in src/config.ts:
+  - Potential API key detected → Move to .env file and use environment variables (e.g., process.env.API_KEY)
 ```
 
 **Auto-format (post-edit):**
 
-```
-✓ Formatted with prettier: src/components/Button.tsx
-✓ Formatted with black: scripts/deploy.py
-```
+The edited file is formatted silently with the project's own formatter; the hook prints nothing.
 
 **Desktop notifications:**
 
@@ -222,7 +214,7 @@ Hooks run automatically on events:
 
 All commands use the format `/project-starter:<command>`.
 
-### Output Styles
+### Mode Commands (Output Styles)
 
 | Command                      | Mode                                          |
 | ---------------------------- | --------------------------------------------- |
@@ -271,12 +263,12 @@ All commands use the format `/project-starter:<command>`.
 
 ### Onboarding & Knowledge
 
-| Command                                   | Purpose                                   |
-| ----------------------------------------- | ----------------------------------------- |
-| `/project-starter:tutorial`               | Interactive guided tutorial for new users |
-| `/project-starter:bootstrap-repo`         | 10-agent parallel repo exploration        |
-| `/project-starter:save-session-learnings` | Persist session discoveries to docs       |
-| `/project-starter:metrics`                | View agent performance metrics            |
+| Command                                   | Purpose                                                         |
+| ----------------------------------------- | --------------------------------------------------------------- |
+| `/project-starter:tutorial`               | Interactive guided tutorial for new users                       |
+| `/project-starter:bootstrap-repo`         | 10-agent parallel repo exploration                              |
+| `/project-starter:save-session-learnings` | Persist session discoveries to docs                             |
+| `/project-starter:metrics`                | Summarise the per-turn records in `.claude/agent-metrics.jsonl` |
 
 ---
 
@@ -310,7 +302,7 @@ Skills are knowledge domains that Claude uses autonomously when relevant.
 | `designing-apis`              | REST/GraphQL patterns and best practices              |
 | `parallel-execution`          | Multi-subagent parallel task execution patterns       |
 | `web-design-guidelines`       | Self-contained UI audit (A11Y, PERF, RD, SEC, I18N)   |
-| `vercel-react-best-practices` | React/Next.js performance optimization (45 rules)     |
+| `vercel-react-best-practices` | React/Next.js performance optimization (47 rules)     |
 | `convex-backend`              | Convex backend development (functions, schemas, etc.) |
 | `database-design`             | Schema design, indexing, query optimization           |
 | `devops-infrastructure`       | Docker, CI/CD, deployment, IaC, monitoring            |
@@ -323,22 +315,22 @@ Skills are knowledge domains that Claude uses autonomously when relevant.
 
 Hooks run automatically on specific events.
 
-| Hook                  | Trigger       | Action                                  |
-| --------------------- | ------------- | --------------------------------------- |
-| Security scan         | Edit/Write    | Blocks commits with potential secrets   |
-| File protection       | Edit/Write    | Blocks edits to lock files, .env, .git  |
-| Auto-format           | Edit/Write    | Runs prettier/black/gofmt by file type  |
-| TypeScript check      | Edit/Write    | Runs `tsc --noEmit` on .ts/.tsx files   |
-| Pre-commit check      | Bash          | Detects debug statements & temp markers |
-| Branch protection     | Bash          | Warns on commits to protected branches  |
-| Command logging       | Bash          | Logs to `.claude/command-history.log`   |
-| Environment check     | Session start | Validates Node.js, Python, Git          |
-| Prompt analysis       | User prompt   | Suggests appropriate agents             |
-| Auto-verify           | Task complete | Runs tests/lint, reports results        |
-| Doc update suggest    | Task complete | Suggests CLAUDE.md updates for changes  |
-| Session metrics       | Task complete | Logs session telemetry to metrics file  |
-| Input notification    | Input needed  | Desktop notification                    |
-| Complete notification | Task complete | Desktop notification                    |
+| Hook                  | Trigger       | Action                                                      |
+| --------------------- | ------------- | ----------------------------------------------------------- |
+| Security scan         | Edit/Write    | Blocks edits that contain potential secrets                 |
+| File protection       | Edit/Write    | Blocks edits to lock files, .env files, .git                |
+| Auto-format           | Edit/Write    | Runs the project's prettier/black/gofmt by file type        |
+| TypeScript check      | Edit/Write    | Runs the project's `tsc --noEmit`, reports errors to Claude |
+| Pre-commit check      | Edit/Write    | Flags debug statements & temp markers to Claude             |
+| Branch protection     | Bash          | Warns on commit/push on protected branches                  |
+| Command logging       | Bash          | Logs every command to `.claude/command-history.log`         |
+| Environment check     | Session start | Validates Node.js, Python, Git                              |
+| Prompt analysis       | User prompt   | Suggests appropriate agents                                 |
+| Auto-verify           | Task complete | Runs tests/lint, reports results                            |
+| Doc update suggest    | Task complete | Suggests CLAUDE.md updates for changes                      |
+| Session metrics       | Task complete | Logs timestamp, changed-file count, latest commit           |
+| Input notification    | Input needed  | Desktop notification                                        |
+| Complete notification | Task complete | Desktop notification                                        |
 
 ---
 
@@ -351,7 +343,7 @@ For detailed multi-agent orchestration examples, see the [examples/](./examples/
 | [Comprehensive Code Review](./examples/orchestration/comprehensive-code-review/) | 6-agent sequential workflow for thorough code analysis |
 | [Parallel Execution](./examples/orchestration/parallel-execution/)               | Fan-out multi-subagent workflow for independent tasks  |
 
-Each example includes:
+The comprehensive-code-review example includes:
 
 - **README.md** - Overview and quick start
 - **workflow.md** - Exact prompts to use
@@ -371,7 +363,7 @@ mkdir -p /path/to/your/project/.claude
 cp templates/settings.local.json.template /path/to/your/project/.claude/settings.local.json
 ```
 
-This pre-allows common safe commands so you don't get prompted every time.
+This pre-allows a broad set of development commands so you don't get prompted every time. It includes interpreters and package runners (`python`, `npx`, `bun`), network tools (`curl`, `wget`) and `git push`, which together allow arbitrary code execution and data egress without a prompt — trim the list to what your project needs.
 
 ### Add Team Conventions
 
@@ -402,9 +394,9 @@ Then configure the environment variables for the servers you want to use.
 
 Enable Claude to respond to PR comments by installing the GitHub Action:
 
-```bash
-# In your repository
-claude /install-github-action
+```
+# Inside Claude Code, in your repository
+> /install-github-app
 ```
 
 This enables:
@@ -437,7 +429,7 @@ Create `.md` files in `commands/`:
 ---
 allowed-tools: Bash(git:*), Read, Write
 description: What this command does
-argument-hint: [optional arguments]
+argument-hint: "[optional arguments]"
 ---
 
 [Command instructions here]
@@ -568,7 +560,7 @@ This repo is fully compatible with [skills.sh](https://skills.sh) — the univer
 | **Cline**       | `npx skills add CloudAI-X/claude-workflow-v2`                        |
 | **35+ more**    | `npx skills add CloudAI-X/claude-workflow-v2`                        |
 
-> **Note:** `npx skills add` installs **skills only**. For the full Claude Code experience (agents, commands, hooks), use `npx install-claude-workflow-v2@latest`.
+> **Note:** `npx skills add` installs **skills only**. For agents, commands and hooks as well, use `npx install-claude-workflow-v2@latest` or install the plugin (Option 5).
 
 ---
 

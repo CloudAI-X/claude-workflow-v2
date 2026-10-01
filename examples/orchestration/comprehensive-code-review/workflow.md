@@ -180,4 +180,4 @@ Check:
 Provide prioritized findings with actionable recommendations.
 ```
 
-2. Invoke with: `/project:comprehensive-review the auth module`
+2. Invoke with: `/comprehensive-review the auth module`

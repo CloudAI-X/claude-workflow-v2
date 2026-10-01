@@ -92,7 +92,7 @@ ls agents/
 # Should show: orchestrator.md, code-reviewer.md, etc.
 
 # Reload plugin
-/plugin reload
+/reload-plugins
 ```
 
 ### No Output from Agent

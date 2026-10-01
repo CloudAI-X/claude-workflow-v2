@@ -14,6 +14,8 @@ Claude Code and Codex-compatible clients:
 - `.codex-plugin/plugin.json`, `.codex/config.toml`, `.codex/agents/*.toml`, `.codex/hooks.json`
 - `skills/*/SKILL.md`
 - Hook scripts under `hooks/`
+- The npm installer under `packages/add-skill/` (published as `install-claude-workflow-v2`)
+- Configuration templates under `templates/`
 
 ## Response
 

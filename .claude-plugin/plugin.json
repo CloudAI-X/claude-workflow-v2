@@ -1,7 +1,7 @@
 {
   "name": "project-starter",
   "version": "2.0.6",
-  "description": "Universal Claude Code workflow with specialized agents, skills, hooks, and output styles for any software project. Includes orchestrator, code-reviewer, debugger, docs-writer, security-auditor, refactorer, and test-architect agents.",
+  "description": "Universal Claude Code workflow with specialized agents, skills, hooks, and mode commands for any software project. Includes orchestrator, code-reviewer, debugger, docs-writer, security-auditor, refactorer, and test-architect agents.",
   "author": {
     "name": "CloudAI-X"
   },

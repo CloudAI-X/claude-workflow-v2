@@ -4,7 +4,7 @@
 
 ## Quick Reference
 
-- **Plugin validation**: `claude plugin validate`
+- **Plugin validation**: `claude plugin validate . && claude plugin validate .claude-plugin/plugin.json`
 - **Test locally**: `claude --plugin-dir ./`
 - **Formatting**: Prettier for MD/JSON, Black for Python
 
@@ -13,7 +13,7 @@
 ### Making Changes
 
 1. **Before editing any file**:
-   - Run `claude plugin validate` to ensure current state is valid
+   - Run `claude plugin validate . && claude plugin validate .claude-plugin/plugin.json` to ensure current state is valid
    - Check existing patterns in similar files
 
 2. **When adding agents** (`agents/*.md`):
@@ -34,7 +34,7 @@
    - Test with both success and failure cases
 
 5. **After all changes**:
-   - Run `claude plugin validate`
+   - Run `claude plugin validate . && claude plugin validate .claude-plugin/plugin.json`
    - Test the specific feature with Claude Code
 
 ## Code Conventions
@@ -132,7 +132,7 @@ model: sonnet
 
 Before pushing:
 
-- [ ] `claude plugin validate` passes
+- [ ] `claude plugin validate . && claude plugin validate .claude-plugin/plugin.json` passes
 - [ ] Tested feature manually with Claude Code
 - [ ] No hardcoded paths (use `${CLAUDE_PLUGIN_ROOT}`)
 - [ ] Hook scripts handle errors gracefully
@@ -154,7 +154,7 @@ Before pushing:
 
 ### Validation failing
 
-- Run `claude plugin validate` for specific errors
+- Run `claude plugin validate . && claude plugin validate .claude-plugin/plugin.json` for specific errors
 - Check JSON syntax in all config files
 - Verify all referenced files exist
 
@@ -168,3 +168,9 @@ Before pushing:
 - MCP permissions go in user's settings, not plugin
 - Commands are accessed via `/project-starter:<command-name>`
 - All commands (output styles, inner-loop, verification) go in `commands/` at root
+- `claude plugin validate` needs a path: `.` checks the marketplace manifest only, `.claude-plugin/plugin.json` checks the plugin manifest and `hooks/hooks.json`
+- Hook output: on exit 0, plain stdout/stderr only reaches the debug log (except SessionStart and UserPromptSubmit, whose stdout goes to Claude). To tell Claude something without blocking, print JSON with `hookSpecificOutput.additionalContext`; to tell the user, print JSON with `systemMessage`; to block, exit 2 with the reason on stderr
+- Hooks never run `npx <tool>`: outside a TTY npx downloads whatever package has that name (`npx tsc` is not TypeScript). Resolve `node_modules/.bin/<tool>` or a binary on PATH instead
+- Quote `argument-hint` values (`argument-hint: "[file]"`); a bare `[...]` is a YAML list and strict loaders drop the command
+- Versions must agree in `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (twice), `.codex-plugin/plugin.json`, `packages/add-skill/package.json` and the latest CHANGELOG entry (CI checks this)
+- The npm installer registers hooks in `.claude/settings.json` by rewriting `${CLAUDE_PLUGIN_ROOT}/hooks/…` from `hooks/hooks.json`; keep hook commands in that form

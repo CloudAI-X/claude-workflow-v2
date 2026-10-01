@@ -79,14 +79,13 @@ description: Guides [domain]. Use when [triggers].
 - Include trigger keywords in descriptions
 - Make content language-agnostic where possible
 
-### Adding Output Styles (Commands)
+### Adding Mode Commands
 
 Create a `.md` file in `commands/`:
 
 ```markdown
 ---
 description: What this mode does
-keep-coding-instructions: true
 ---
 
 [Style instructions here]
@@ -103,11 +102,23 @@ keep-coding-instructions: true
 
 ```json
 {
-  "type": "PreToolUse",
-  "matcher": "^Edit|Write$",
-  "command": "${CLAUDE_PLUGIN_ROOT}/hooks/my-hook.sh"
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/my-hook.sh\""
+          }
+        ]
+      }
+    ]
+  }
 }
 ```
+
+Exit 0 allows, exit 2 blocks (the reason goes to stderr). Plain stdout from an exit-0 hook only reaches the debug log on most events — to tell Claude something without blocking, print JSON with `hookSpecificOutput.additionalContext`.
 
 ## Testing
 
@@ -116,7 +127,7 @@ Before submitting:
 1. Install the plugin locally:
 
    ```bash
-   claude --plugin-dir ./claude-workflow
+   claude --plugin-dir .
    ```
 
 2. Test relevant components:
@@ -133,4 +144,4 @@ Please read and follow our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Questions?
 
-Open a [Discussion](https://github.com/CloudAI-X/claude-workflow-v2/discussions) or reach out via Issues.
+Open an [Issue](https://github.com/CloudAI-X/claude-workflow-v2/issues).

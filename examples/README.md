@@ -52,7 +52,7 @@ N-agent parallel workflow for maximum speed:
     └─────┴─────┴─────┴─────┘
           │
           ▼
-   TaskOutput (collect)
+   Results (delivered automatically)
           │
           ▼
      Synthesis
@@ -65,7 +65,7 @@ N-agent parallel workflow for maximum speed:
 - Same quality as sequential execution
 - Unified synthesized results
 
-**Key Rule:** ALL Task calls MUST be in a SINGLE message for true parallelism
+**Key Rule:** ALL Agent tool calls (`Task` in older versions) MUST be in a SINGLE message for true parallelism. Results are delivered automatically when each background subagent finishes (`TaskOutput` is deprecated).
 
 ## How Orchestration Works
 

@@ -4,14 +4,12 @@ Add these to your project's `.claude/settings.local.json` as needed.
 
 ## How to Use
 
-Create or edit `.claude/settings.local.json` in your project and add permissions under the `permissions.allow` array:
+Create or edit `.claude/settings.local.json` in your project and add permissions from the sections below under the `permissions.allow` array:
 
 ```json
 {
   "permissions": {
-    "allow": [
-      // Add permissions from sections below
-    ]
+    "allow": []
   }
 }
 ```
