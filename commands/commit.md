@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git add:*), Bash(git commit:*)
 description: Create a conventional commit with auto-generated message
-argument-hint: [optional scope or message hint]
+argument-hint: "[optional scope or message hint]"
 ---
 
 ## Context
@@ -10,7 +10,7 @@ argument-hint: [optional scope or message hint]
 - Git status: !`git status --short`
 - Staged changes: !`git diff --cached --stat`
 - Staged diff: !`git diff --cached`
-- Recent commits (for style reference): !`git log --oneline -5`
+- Recent commits (for style reference): !`git log --oneline -5 2>/dev/null || echo "No commits yet"`
 
 ## Task
 

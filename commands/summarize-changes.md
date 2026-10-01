@@ -1,17 +1,18 @@
 ---
 allowed-tools: Bash(git:*)
 description: Summarize recent changes for standup, PR, or documentation
-argument-hint: [today|week|branch|pr] (default: today)
+argument-hint: "[today|week|branch|pr] (default: today)"
 ---
 
 ## Context
 
 - Current branch: !`git branch --show-current`
 - Default branch: !`git remote show origin 2>/dev/null | grep 'HEAD branch' | cut -d' ' -f5 || echo "main"`
-- Today's commits: !`git log --oneline --since="midnight" --author="$(git config user.email)" 2>/dev/null || echo "No commits today"`
-- This week's commits: !`git log --oneline --since="1 week ago" --author="$(git config user.email)" 2>/dev/null | head -20 || echo "No commits this week"`
-- Branch commits (vs main): !`git log --oneline $(git remote show origin 2>/dev/null | grep 'HEAD branch' | cut -d' ' -f5 || echo "main")..HEAD 2>/dev/null | head -20 || echo "No branch commits"`
-- Files changed on branch: !`git diff --stat $(git merge-base HEAD origin/$(git remote show origin 2>/dev/null | grep 'HEAD branch' | cut -d' ' -f5 || echo "main"))..HEAD 2>/dev/null | tail -5 || echo "No changes"`
+- Git user: !`git config user.email 2>/dev/null || echo "unknown"`
+- Today's commits (all authors): !`git log --oneline --since="midnight" 2>/dev/null || echo "No commits today"`
+- This week's commits (all authors): !`git log --oneline --since="1 week ago" 2>/dev/null | head -20`
+- Branch commits (vs origin's default branch): !`git log --oneline origin/HEAD..HEAD 2>/dev/null | head -20`
+- Files changed on branch: !`git diff --stat origin/HEAD...HEAD 2>/dev/null | tail -5`
 
 ## Task
 
@@ -21,6 +22,8 @@ Generate a clear, concise summary based on the scope:
 2. **week**: Weekly summary (for reports)
 3. **branch**: All changes on this branch (for PR)
 4. **pr**: Full PR description with sections
+
+For **today** and **week**, report only the git user's own commits: re-run the log with `--author=<git user>` using the address shown above. If the two branch lists above are empty, compute them against the default branch shown above.
 
 Format the output as:
 - **Summary**: 1-2 sentence overview

@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash(git:*), Bash(npm:*), Bash(npx:*), Bash(yarn:*), Bash(pnpm:*), Bash(bun:*), Bash(pytest:*), Bash(python:*), Bash(go:*), Bash(cargo:*), Read, Write, Edit, Glob, Grep
 description: Systematic, safety-first refactoring with verification at each step. Never refactors and adds features simultaneously.
-argument-hint: [target file, directory, or refactoring description]
+argument-hint: "[target file, directory, or refactoring description]"
 ---
 
 # Guided Refactoring
@@ -10,11 +10,11 @@ Perform safe, incremental refactoring with test verification at every step.
 
 ## Context
 
-- Recent changes: !`git diff --name-only HEAD~3 2>/dev/null | head -10 || echo "No recent changes"`
+- Recent changes: !`git diff --name-only HEAD~3 2>/dev/null | head -10`
 - Current branch: !`git branch --show-current`
 - Working tree status: !`git status --short`
-- Test framework: !`cat package.json 2>/dev/null | grep -E '"(jest|vitest|mocha)"' | head -1 || ls pytest.ini pyproject.toml 2>/dev/null | head -1 || ls Cargo.toml go.mod 2>/dev/null | head -1 || echo "Unknown"`
-- Existing tests: !`find . -name "*test*" -o -name "*spec*" 2>/dev/null | grep -E '\.(ts|tsx|js|jsx|py|go|rs)$' | head -10 || echo "No test files found"`
+- Project root files (infer the test framework from these): !`ls -a`
+- Existing tests: !`git ls-files 2>/dev/null | grep -i -e test -e spec | head -10`
 
 ## Safety Rules (NON-NEGOTIABLE)
 
@@ -22,15 +22,15 @@ Perform safe, incremental refactoring with test verification at every step.
 2. **NEVER proceed without passing tests.** If tests fail after a refactoring, revert immediately.
 3. **ONE refactoring at a time.** Each commit is a single, atomic refactoring step.
 4. **Preserve external behavior.** Inputs and outputs must remain identical.
-5. **Ensure clean working tree before starting.** Stash or commit uncommitted changes first.
+5. **Ensure clean working tree before starting.** If there are uncommitted changes, stop and ask the user — do not stash or commit their work yourself.
 
 ## Workflow
 
 ### Phase 1: Analyze Scope
 
 1. Identify the target file(s) or directory from `$ARGUMENTS`
-2. Map all dependencies — files that import/use the target
-3. Map all dependents — files that the target imports/uses
+2. Map all dependents — files that import/use the target
+3. Map all dependencies — files that the target imports/uses
 4. Assess blast radius: how many files could be affected?
 5. Report scope summary before proceeding:
    ```
@@ -63,7 +63,7 @@ For each refactoring step:
    - Commit with message: `refactor: [specific change description]`
    - Move to next refactoring step
 5. **If tests FAIL:**
-   - Revert the change: `git checkout -- .`
+   - Revert the change: `git checkout -- .`, and delete any new files this step created (they are untracked, so checkout leaves them behind)
    - Analyze why it failed
    - Try a different approach or break it into smaller steps
    - Document what went wrong

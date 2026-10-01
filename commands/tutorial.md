@@ -13,11 +13,11 @@ Before starting, silently gather context:
 
 1. Use Glob to find `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, or other project markers in the working directory
 2. Identify the project's primary language and framework
-3. Use Glob to list the plugin's available components:
-   - `agents/*.md` for agents
-   - `skills/*/SKILL.md` for skills
-   - `hooks/hooks.json` for hooks
-   - `commands/*.md` for commands
+3. Use Glob to list the plugin's available components. They live in the plugin's install directory, `${CLAUDE_PLUGIN_ROOT}` (if that placeholder still appears literally here, the workflow was installed with npx: use `.claude/` instead):
+   - `${CLAUDE_PLUGIN_ROOT}/agents/*.md` for agents
+   - `${CLAUDE_PLUGIN_ROOT}/skills/*/SKILL.md` for skills
+   - `${CLAUDE_PLUGIN_ROOT}/hooks/hooks.json` for hooks
+   - `${CLAUDE_PLUGIN_ROOT}/commands/*.md` for commands
 
 Then begin the tutorial.
 
@@ -25,7 +25,7 @@ Then begin the tutorial.
 
 Greet the user and introduce the agent system.
 
-Read each file in `agents/*.md` and present a summary table:
+Read each file in `${CLAUDE_PLUGIN_ROOT}/agents/*.md` and present a summary table:
 
 ```
 Welcome to the Claude Workflow Plugin tutorial.
@@ -53,7 +53,7 @@ Explain that the orchestrator can spawn subagents for parallel work, and how age
 
 ## Step 2: Commands at Your Fingertips
 
-Read the list of command files from `commands/*.md` and present them:
+Read the list of command files from `${CLAUDE_PLUGIN_ROOT}/commands/*.md` and present them:
 
 ```
 Commands are slash-invocable workflows. Think of them as recipes
@@ -72,7 +72,7 @@ Commands can be simple (commit) or complex (verify-changes spawns
 5+ parallel subagents).
 ```
 
-Read the `commit.md` command file and walk through how it works:
+Read `${CLAUDE_PLUGIN_ROOT}/commands/commit.md` and walk through how it works:
 
 ```
 Let's look at how /project-starter:commit works:
@@ -85,15 +85,16 @@ Let's look at how /project-starter:commit works:
 Notice the frontmatter:
   allowed-tools: Bash(git status:*), Bash(git diff:*), ...
 
-This restricts the command to only git operations -- it can't
-accidentally modify your files.
+This pre-approves those git commands for the turn, so the
+command runs without permission prompts. It does not
+restrict Claude to them.
 ```
 
 **Try it**: Suggest staging a file and running `/project-starter:commit`.
 
 ## Step 3: Hooks That Protect Your Code
 
-Read `hooks/hooks.json` and explain each hook:
+Read `${CLAUDE_PLUGIN_ROOT}/hooks/hooks.json` and explain each hook:
 
 ```
 Hooks run automatically before or after certain actions.
@@ -131,7 +132,7 @@ your workflow unexpectedly.
 
 ## Step 4: Skills That Enhance Responses
 
-Read `skills/*/SKILL.md` files and present the skill domains:
+Read `${CLAUDE_PLUGIN_ROOT}/skills/*/SKILL.md` files and present the skill domains:
 
 ```
 Skills inject domain knowledge into responses. When a skill's

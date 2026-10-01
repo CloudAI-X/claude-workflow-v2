@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash(git:*)
 description: Sync current branch with main/master (fetch, rebase or merge)
-argument-hint: [merge|rebase] (default: rebase)
+argument-hint: "[merge|rebase] (default: rebase)"
 ---
 
 ## Context
@@ -9,7 +9,7 @@ argument-hint: [merge|rebase] (default: rebase)
 - Current branch: !`git branch --show-current`
 - Default branch: !`git remote show origin 2>/dev/null | grep 'HEAD branch' | cut -d' ' -f5 || echo "main"`
 - Uncommitted changes: !`git status --porcelain`
-- Commits ahead/behind: !`git rev-list --left-right --count origin/$(git remote show origin 2>/dev/null | grep 'HEAD branch' | cut -d' ' -f5 || echo "main")...HEAD 2>/dev/null || echo "unknown"`
+- Commits behind/ahead of origin's default branch: !`git rev-list --left-right --count origin/HEAD...HEAD 2>/dev/null || echo "unknown"`
 - Current remote: !`git remote -v | head -2`
 
 ## Task
