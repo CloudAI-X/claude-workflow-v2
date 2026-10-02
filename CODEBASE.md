@@ -12,7 +12,7 @@
 | Attribute        | Value                                           |
 | ---------------- | ----------------------------------------------- |
 | **Name**         | project-starter                                 |
-| **Version**      | 2.0.6                                           |
+| **Version**      | 2.0.7                                           |
 | **Type**         | Claude Code Plugin                              |
 | **License**      | MIT                                             |
 | **Author**       | CloudAI-X                                       |
@@ -622,6 +622,10 @@ All tools are optional. Missing tools result in warnings, not failures.
 ---
 
 ## Version History
+
+### v2.0.7 (2026-10-02)
+
+- **Audit release**: fixes across hooks, commands, the npm installer, skills, templates and docs — see `CHANGELOG.md`
 
 ### v2.0.6 (2026-02-14)
 

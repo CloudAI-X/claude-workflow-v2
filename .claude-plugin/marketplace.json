@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Universal Claude Code workflow plugins with specialized agents, skills, hooks, and mode commands",
-    "version": "2.0.6"
+    "version": "2.0.7"
   },
   "plugins": [
     {
       "name": "project-starter",
       "source": "./",
       "description": "Universal Claude Code workflow with specialized agents, skills, hooks, and mode commands for any software project. Includes orchestrator, code-reviewer, debugger, docs-writer, security-auditor, refactorer, and test-architect agents.",
-      "version": "2.0.6",
+      "version": "2.0.7",
       "author": {
         "name": "CloudAI-X"
       },

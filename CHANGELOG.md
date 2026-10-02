@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [2.0.7] - 2026-10-02
 
 ### Security
 
@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `track-metrics.py` crashed on Python 3.8 (type hints evaluated at import); `branch-protection.sh` and `log-commands.sh` no longer print a `jq` parse error on malformed input.
 - `templates/mcp.json.template` pointed at eight npm packages that do not exist; it now uses the vendors' remote MCP endpoints and the maintained `@modelcontextprotocol` packages. `templates/settings.local.json.template` no longer installs a hook that relied on a non-existent `$CLAUDE_FILE_PATH` variable.
 - Skills: corrected examples that did not work as written in `devops-infrastructure` (GHCR push without login or permission, Postgres containers without a password, dev dependencies left in the image, `uv sync` before the source is copied, end-of-life Node 20), `database-design` (zero-downtime migration lost writes, keyset pagination without a tie-breaker, trigger never attached), `error-handling` (pino calls that dropped their fields, a retry example that never retried), `optimizing-performance`, `designing-tests`, `designing-apis`, `managing-git`, `web-design-guidelines` and `vercel-react-best-practices` (two SWR imports that do not exist).
-- Documentation: plugin install commands (`claude plugin marketplace add` + `project-starter@claude-workflow`), hook table triggers and behaviour, `/install-github-app`, `claude plugin validate` usage, the contributor hook-registration example, changelog years for 1.0.0 and 1.1.0, and the privacy policy's description of the local command and metrics logs.
+- Documentation: plugin install commands (`claude plugin marketplace add` + `project-starter@claude-workflow`), hook table triggers and behaviour, `/install-github-app`, `claude plugin validate` usage, the contributor hook-registration example, changelog years for 1.0.0 and 1.1.0, the privacy policy's description of the local command and metrics logs, and the security policy, which now points to private vulnerability reporting.
 
 ### Changed
 
@@ -176,6 +176,7 @@ after 1.2.0 and was not previously recorded here.
 - Comprehensive documentation (README, PERMISSIONS, MCP servers guide)
 - MIT License
 
+[2.0.7]: https://github.com/CloudAI-X/claude-workflow-v2/releases/tag/v2.0.7
 [2.0.6]: https://github.com/CloudAI-X/claude-workflow-v2/releases/tag/v2.0.6
 [1.2.0]: https://github.com/CloudAI-X/claude-workflow-v2/releases/tag/v1.2.0
 [1.1.0]: https://github.com/CloudAI-X/claude-workflow-v2/releases/tag/v1.1.0
