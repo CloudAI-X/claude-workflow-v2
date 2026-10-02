@@ -3,12 +3,18 @@
 Post-task documentation suggestion hook.
 Detects significant changes and suggests CLAUDE.md/AGENTS.md updates.
 Runs on Stop event. Informational only - never blocks.
+Suggestions are shown to the user via a JSON systemMessage on stdout.
 """
 
+from __future__ import annotations
+
+import hashlib
 import json
 import os
+import re
 import subprocess
 import sys
+import tempfile
 
 
 def run_command(cmd: list[str], timeout: int = 15) -> tuple[bool, str]:
@@ -50,28 +56,44 @@ def get_changed_files() -> list[str]:
             if len(parts) == 2:
                 files.append(line)
 
-    # Untracked files
+    # Untracked files, minus .claude/: that holds Claude Code config and the
+    # logs this plugin's own hooks write, not project code worth documenting.
     success, output = run_command(["git", "ls-files", "--others", "--exclude-standard"])
     if success and output:
         for f in output.split("\n"):
-            if f.strip():
+            if f.strip() and not f.strip().startswith(".claude/"):
                 files.append(f"A\t{f.strip()}")
 
     return files
 
 
 def detect_new_directories(changed_files: list[str]) -> list[str]:
-    """Detect new directories created (directories with only new files)."""
+    """Detect new directories (top-most directories holding no tracked file)."""
+    success, output = run_command(["git", "ls-files"])
+    if not success:
+        return []
+
+    tracked_dirs = set()
+    for f in output.split("\n"):
+        d = os.path.dirname(f)
+        while d:
+            tracked_dirs.add(d)
+            d = os.path.dirname(d)
+
     new_dirs = set()
     for entry in changed_files:
         parts = entry.split("\t", 1)
         if len(parts) == 2:
             status, filepath = parts
             if status.startswith("A") or status.startswith("?"):
-                # Extract directory path
-                dir_path = os.path.dirname(filepath)
-                if dir_path:
-                    new_dirs.add(dir_path)
+                top_new = None
+                d = os.path.dirname(filepath)
+                while d:
+                    if d not in tracked_dirs:
+                        top_new = d
+                    d = os.path.dirname(d)
+                if top_new:
+                    new_dirs.add(top_new)
     return sorted(new_dirs)
 
 
@@ -235,12 +257,24 @@ def main():
                 f"  - {total_changed} files changed -> Consider running /project-starter:save-session-learnings"
             )
 
-        # Print suggestions if any
+        # Stop fires every turn: show a given set of suggestions once per session
         if suggestions:
-            print("\nDocumentation update suggested:", file=sys.stderr)
-            for s in suggestions:
-                print(s, file=sys.stderr)
-            print("", file=sys.stderr)
+            text = "\n".join(suggestions)
+            digest = hashlib.sha256(text.encode("utf-8")).hexdigest()
+            sid = re.sub(r"[^A-Za-z0-9_-]", "", str(input_data.get("session_id", "default"))) or "default"
+            state_file = os.path.join(tempfile.gettempdir(), f"claude-doc-suggest-{sid}.txt")
+            try:
+                with open(state_file) as f:
+                    seen = f.read().strip()
+            except Exception:
+                seen = ""
+            if seen != digest:
+                try:
+                    with open(state_file, "w") as f:
+                        f.write(digest)
+                except Exception:
+                    pass
+                print(json.dumps({"systemMessage": "Documentation update suggested:\n" + text}))
 
     except Exception:
         # Never block on errors

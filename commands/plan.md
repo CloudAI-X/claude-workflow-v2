@@ -1,7 +1,7 @@
 ---
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash(git:*)
 description: Create and maintain a structured PLAN.md for persistent task tracking. Supports phases, dependencies, and progress tracking.
-argument-hint: [plan description, "status" to show current plan, or "complete" to mark done]
+argument-hint: '[plan description, "status" to show current plan, or "complete" to mark done]'
 ---
 
 # Persistent Planning

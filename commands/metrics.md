@@ -1,6 +1,6 @@
 ---
 allowed-tools: Read, Bash, Glob
-description: View agent performance metrics and session history. Shows usage patterns, files changed, and session summaries.
+description: "Summarise the per-turn records written by the track-metrics hook: activity over time, files changed, and latest commits."
 ---
 
 ## Context
@@ -9,29 +9,28 @@ description: View agent performance metrics and session history. Shows usage pat
 
 ## Task
 
-Analyze the agent performance metrics and present a summary.
+Analyze the recorded metrics and present a summary.
 
 **If the metrics file does not exist or the context above shows "NO_METRICS_FILE":**
-Print exactly: "No metrics recorded yet. Metrics are automatically collected after each session."
+Print exactly: "No metrics recorded yet. Metrics are automatically collected after each turn."
 
 **If metrics data exists**, parse each JSON line and present:
 
 1. **Overview**
-   - Total sessions logged
-   - Sessions in the last 7 days (compare timestamps to now)
-   - Average files changed per session
+   - Total turns logged (the hook writes one record each time Claude finishes responding)
+   - Turns in the last 7 days (compare timestamps to now)
+   - Average files changed per turn
 
-2. **Recent Sessions** (last 10)
+2. **Recent Turns** (last 10)
    Format as a markdown table:
 
-   | #   | Timestamp (UTC) | Files Changed | Commit | Status |
-   | --- | --------------- | ------------- | ------ | ------ |
-   - Show the most recent 10 sessions, newest first
+   | #   | Timestamp (UTC) | Files Changed | Commit |
+   | --- | --------------- | ------------- | ------ |
+   - Show the most recent 10 turns, newest first
    - For "Commit", show the short commit message or "—" if none
-   - For "Status", show the duration_hint value
 
 3. **Patterns**
-   - Note any trends (e.g., sessions with many file changes, frequency of commits)
-   - If there are sessions with 0 files changed, note how many were "no-op" sessions
+   - Note any trends (e.g., turns with many file changes, frequency of commits)
+   - If there are turns with 0 files changed, note how many were "no-op" turns
 
 Keep the output concise and well-formatted.

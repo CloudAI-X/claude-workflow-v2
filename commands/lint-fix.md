@@ -6,10 +6,10 @@ argument-hint: "[optional file or directory path]"
 
 ## Context
 
-- Project type: !`ls package.json 2>/dev/null && echo "node" || ls pyproject.toml setup.py requirements.txt 2>/dev/null && echo "python" || ls go.mod 2>/dev/null && echo "go" || ls Cargo.toml 2>/dev/null && echo "rust" || echo "unknown"`
-- Lint config files: !`ls .eslintrc* .prettierrc* eslint.config.* pyproject.toml .flake8 .golangci.yml rustfmt.toml 2>/dev/null || echo "No lint config found"`
+- Project root files (infer the project type and lint config from these): !`ls -a`
 - Package scripts: !`cat package.json 2>/dev/null | grep -A 20 '"scripts"' | head -25 || echo "No package.json"`
-- Files to lint: !`git diff --name-only --cached 2>/dev/null || git diff --name-only HEAD~1 2>/dev/null || echo "all files"`
+- Staged files: !`git diff --name-only --cached 2>/dev/null`
+- Files changed in the last commit: !`git diff --name-only HEAD~1 2>/dev/null | head -50`
 
 ## Task
 

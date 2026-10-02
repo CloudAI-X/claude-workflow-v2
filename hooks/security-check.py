@@ -16,7 +16,8 @@ SECRET_PATTERNS = [
     (r"ghp_[a-zA-Z0-9]{36}", "GitHub Personal Access Token", "Move to .env file and use environment variables (e.g., process.env.GITHUB_TOKEN)"),
     (r"github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}", "GitHub PAT (fine-grained)", "Move to .env file and use environment variables (e.g., process.env.GITHUB_TOKEN)"),
     (r"sk-[a-zA-Z0-9]{48}", "OpenAI API Key", "Move to .env file and use environment variables (e.g., process.env.OPENAI_API_KEY)"),
-    (r"sk-ant-[a-zA-Z0-9-]{90,}", "Anthropic API Key", "Move to .env file and use environment variables (e.g., process.env.ANTHROPIC_API_KEY)"),
+    (r"sk-(?:proj|svcacct|admin)-[a-zA-Z0-9_-]{40,}", "OpenAI API Key", "Move to .env file and use environment variables (e.g., process.env.OPENAI_API_KEY)"),
+    (r"sk-ant-[a-zA-Z0-9_-]{80,}", "Anthropic API Key", "Move to .env file and use environment variables (e.g., process.env.ANTHROPIC_API_KEY)"),
     (r"-----BEGIN (?:RSA |EC |DSA )?PRIVATE KEY-----", "Private key", "Store in a secrets manager (AWS Secrets Manager, Vault, etc.) — never commit private keys"),
     (r"(?i)aws[_-]?access[_-]?key[_-]?id\s*[:=]\s*[A-Z0-9]{20}", "AWS Access Key", "Move to .env file and use environment variables (e.g., process.env.AWS_ACCESS_KEY_ID)"),
     (
@@ -43,7 +44,23 @@ SKIP_FILES = {
 SKIP_EXTENSIONS = {".md", ".markdown", ".mdx", ".txt", ".rst"}
 
 
-def check_for_secrets(content, file_path):
+# Directories and file names that hold tests/fixtures, where fake credentials
+# are expected. Matched on whole path segments and file-name conventions — a
+# substring match would also skip "latest-app/", "inspector/" or "contest.py".
+SKIP_DIRS = {"examples", "test", "tests", "__tests__", "spec", "specs", "fixtures", "__fixtures__", "__mocks__"}
+TEST_FILE_PATTERN = re.compile(r"^(test_.+|conftest\.py|.+[._-](test|spec)\.[^.]+)$", re.IGNORECASE)
+
+
+def project_relative(file_path, cwd):
+    """Return file_path relative to the project, so parent dirs don't count."""
+    path = file_path.replace("\\", "/")
+    root = (os.environ.get("CLAUDE_PROJECT_DIR") or cwd or "").replace("\\", "/").rstrip("/")
+    if root and path.startswith(root + "/"):
+        return path[len(root) + 1:]
+    return path
+
+
+def check_for_secrets(content, file_path, cwd=""):
     """Check content for potential secrets."""
     issues = []
 
@@ -56,13 +73,11 @@ def check_for_secrets(content, file_path):
     if os.path.splitext(file_path)[1].lower() in SKIP_EXTENSIONS:
         return issues
 
-    # Skip example directories for the same reason.
-    path_lower = file_path.replace("\\", "/").lower()
-    if "/examples/" in path_lower or path_lower.startswith("examples/"):
+    # Skip example, test and fixture locations for the same reason.
+    segments = project_relative(file_path, cwd).lower().split("/")
+    if any(segment in SKIP_DIRS for segment in segments[:-1]):
         return issues
-
-    # Skip test files checking for secret patterns
-    if "test" in file_path.lower() or "spec" in file_path.lower():
+    if TEST_FILE_PATTERN.match(segments[-1]):
         return issues
 
     for pattern, secret_type, remediation in SECRET_PATTERNS:
@@ -85,7 +100,7 @@ def main():
         if not file_path or not content:
             sys.exit(0)
 
-        issues = check_for_secrets(content, file_path)
+        issues = check_for_secrets(content, file_path, input_data.get("cwd", ""))
 
         if issues:
             # On exit code 2, Claude Code ignores stdout and feeds stderr back

@@ -10,7 +10,7 @@ Safely upgrade dependencies one at a time with testing between each upgrade.
 
 ## Context
 
-- Package manager detection: !`ls package-lock.json 2>/dev/null && echo "npm" || ls yarn.lock 2>/dev/null && echo "yarn" || ls pnpm-lock.yaml 2>/dev/null && echo "pnpm" || ls bun.lockb 2>/dev/null && echo "bun" || ls Cargo.toml 2>/dev/null && echo "cargo" || ls go.mod 2>/dev/null && echo "go" || ls requirements.txt pyproject.toml 2>/dev/null && echo "pip/uv" || echo "Unknown"`
+- Project root files (infer the package manager from the lockfile present): !`ls -a`
 - Current branch: !`git branch --show-current`
 - Working tree status: !`git status --short`
 - Node version (if applicable): !`node --version 2>/dev/null || echo "N/A"`
@@ -21,7 +21,7 @@ Safely upgrade dependencies one at a time with testing between each upgrade.
 ### Phase 1: Detect Environment
 
 1. Identify the package manager from context above
-2. Confirm a clean working tree (stash or commit uncommitted changes first)
+2. Confirm a clean working tree. If there are uncommitted changes, stop and ask the user how to proceed — do not stash or commit their work yourself
 3. Ensure tests pass BEFORE any upgrades — this is the baseline:
    - Node.js: `npm test` / `yarn test` / `pnpm test` / `bun test`
    - Python: `pytest` / `python -m pytest`
@@ -81,7 +81,8 @@ For EACH dependency:
    - yarn: `yarn upgrade package@latest`
    - pnpm: `pnpm update package@latest`
    - bun: `bun update package`
-   - pip/uv: `uv add package@latest` or `uv pip install --upgrade package`
+   - uv: `uv lock --upgrade-package package && uv sync`
+   - pip: `pip install --upgrade package`
    - cargo: update version in Cargo.toml, then `cargo update -p package`
    - go: `go get package@latest && go mod tidy`
 4. **Run tests** immediately
@@ -89,7 +90,7 @@ For EACH dependency:
    - Commit: `chore(deps): upgrade [package] from [old] to [new]`
    - Continue to next package
 6. **If tests FAIL:**
-   - Revert: `git checkout -- .` and restore lockfile
+   - Revert: `git checkout -- .`, then reinstall from the restored lockfile (`npm ci`, `yarn install --frozen-lockfile`, `pnpm install --frozen-lockfile`, `uv sync`) so the installed packages match it again
    - Record the failure reason
    - If it is a minor/patch with failing tests, flag as unexpected
    - Move to the next package

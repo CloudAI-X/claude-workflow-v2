@@ -24,7 +24,7 @@ claude mcp add --transport http netlify https://netlify-mcp.netlify.app/mcp
 
 ```bash
 # Context7 - Up-to-date library documentation
-claude mcp add --transport stdio context7 -- npx -y @context7/mcp-server
+claude mcp add --transport stdio context7 -- npx -y @upstash/context7-mcp
 
 # Scholar Gateway - Academic research
 claude mcp add --transport http scholar-gateway https://connector.scholargateway.ai/mcp

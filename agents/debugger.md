@@ -29,7 +29,7 @@ Read the error/stack trace FIRST, then investigate. Never guess at fixes without
 After 3 failed fix attempts on the same error:
 
 1. Stop and re-read the original error message
-2. Search the web for the exact error message
+2. Search for the exact error message — on the web if search tools are available to you, otherwise in the dependency's docs and changelog inside the project
 3. Check if the issue is a known framework/library bug
 4. If still stuck, flag to user with everything tried so far
 

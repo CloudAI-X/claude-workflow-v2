@@ -45,12 +45,12 @@ Apply the testing pyramid for balanced coverage:
 
 ### JavaScript/TypeScript
 
-| Type        | Recommended     | Alternative      |
-| ----------- | --------------- | ---------------- |
-| Unit        | Vitest          | Jest             |
-| Integration | Vitest + MSW    | Jest + SuperTest |
-| E2E         | Playwright      | Cypress          |
-| Component   | Testing Library | Enzyme           |
+| Type        | Recommended     | Alternative         |
+| ----------- | --------------- | ------------------- |
+| Unit        | Vitest          | Jest                |
+| Integration | Vitest + MSW    | Jest + SuperTest    |
+| E2E         | Playwright      | Cypress             |
+| Component   | Testing Library | Vitest Browser Mode |
 
 ### Python
 
@@ -120,13 +120,15 @@ describe("[Integration] API /users", () => {
 ### E2E Test
 
 ```javascript
-describe("[E2E] User Registration Flow", () => {
-  it("should complete registration successfully", async ({ page }) => {
+import { test, expect } from "@playwright/test";
+
+test.describe("[E2E] User Registration Flow", () => {
+  test("should complete registration successfully", async ({ page }) => {
     await page.goto("/register");
 
-    await page.fill('[data-testid="email"]', "new@example.com");
-    await page.fill('[data-testid="password"]', "SecurePass123!");
-    await page.click('[data-testid="submit"]');
+    await page.getByTestId("email").fill("new@example.com");
+    await page.getByTestId("password").fill("SecurePass123!");
+    await page.getByTestId("submit").click();
 
     await expect(page.locator(".welcome-message")).toBeVisible();
     await expect(page).toHaveURL("/dashboard");
@@ -147,6 +149,8 @@ describe("[E2E] User Registration Flow", () => {
 - ❌ Simple getters/setters
 
 ### Coverage Thresholds
+
+Jest config shown; the Vitest equivalent is `test.coverage.thresholds` in vitest.config.
 
 ```json
 {

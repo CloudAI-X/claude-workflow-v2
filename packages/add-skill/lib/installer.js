@@ -109,6 +109,8 @@ async function install(repo, name) {
   // Clean up temp
   fs.rmSync(tempTarget, { recursive: true, force: true });
 
+  const hookResult = registerHooks(target);
+
   // Count installed components
   const components = {
     agents: countFiles(path.join(target, "agents"), ".md"),
@@ -123,10 +125,154 @@ async function install(repo, name) {
   console.log(
     `   ${components.agents} agents | ${components.skills} skills | ${components.commands} commands | ${components.hooks} hooks`,
   );
+  if (hookResult.added > 0) {
+    console.log(
+      `   ${hookResult.added} hooks registered in .claude/settings.json`,
+    );
+  } else if (hookResult.error) {
+    console.log(
+      `   ⚠️  Hooks were copied but NOT registered: ${hookResult.error}`,
+    );
+    console.log(
+      `      Add them to .claude/settings.json manually (see .claude/hooks/hooks.json).`,
+    );
+  } else if (hookResult.present > 0) {
+    console.log(`   Hooks already registered in .claude/settings.json`);
+  }
   if (stats.skipped > 0) {
     console.log(`   (${stats.skipped} existing files preserved)`);
   }
   console.log(`\n   Run 'claude' to start.`);
+}
+
+/**
+ * Check whether a value is a plain (non-array, non-null) object
+ */
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+/**
+ * Register the copied hooks in <target>/settings.json (additive, idempotent).
+ * Claude Code ignores .claude/hooks/hooks.json, so the hooks never run otherwise.
+ * @param {string} target - Absolute path of the .claude directory
+ * @returns {{added: number, present: number, error: string|null}} Never throws
+ */
+function registerHooks(target) {
+  const none = { added: 0, present: 0, error: null };
+  try {
+    let source;
+    try {
+      source = JSON.parse(
+        fs.readFileSync(path.join(target, "hooks", "hooks.json"), "utf8"),
+      );
+    } catch {
+      return none;
+    }
+    if (!isPlainObject(source) || !isPlainObject(source.hooks)) return none;
+
+    const settingsPath = path.join(target, "settings.json");
+    let settings = {};
+    if (fs.existsSync(settingsPath)) {
+      try {
+        settings = JSON.parse(fs.readFileSync(settingsPath, "utf8"));
+      } catch {
+        return {
+          added: 0,
+          present: 0,
+          error: "settings.json is not valid JSON",
+        };
+      }
+      if (!isPlainObject(settings)) {
+        return {
+          added: 0,
+          present: 0,
+          error: "settings.json is not a JSON object",
+        };
+      }
+    }
+    if (settings.hooks !== undefined && !isPlainObject(settings.hooks)) {
+      return {
+        added: 0,
+        present: 0,
+        error: '"hooks" in settings.json is not an object',
+      };
+    }
+    for (const event of Object.keys(source.hooks)) {
+      if (
+        settings.hooks &&
+        settings.hooks[event] !== undefined &&
+        !Array.isArray(settings.hooks[event])
+      ) {
+        return {
+          added: 0,
+          present: 0,
+          error: `hooks.${event} in settings.json is not an array`,
+        };
+      }
+    }
+
+    let added = 0;
+    let present = 0;
+    for (const [event, groups] of Object.entries(source.hooks)) {
+      if (!Array.isArray(groups)) continue;
+      const known = new Set();
+      const existing = settings.hooks ? settings.hooks[event] || [] : [];
+      for (const group of existing) {
+        if (!isPlainObject(group) || !Array.isArray(group.hooks)) continue;
+        for (const h of group.hooks) {
+          if (isPlainObject(h) && typeof h.command === "string") {
+            known.add(h.command);
+          }
+        }
+      }
+
+      for (const group of groups) {
+        if (!isPlainObject(group) || !Array.isArray(group.hooks)) continue;
+        const fresh = [];
+        for (const h of group.hooks) {
+          if (!isPlainObject(h) || typeof h.command !== "string") continue;
+          let missing = false;
+          let scripts = 0;
+          // Replacer function: a string replacement would treat "$C"/"$1" specially
+          const command = h.command.replace(
+            /"?\$\{CLAUDE_PLUGIN_ROOT\}\/hooks\/([\w.-]+)"?/g,
+            (_, name) => {
+              scripts++;
+              const script = path.join(target, "hooks", name);
+              if (!fs.existsSync(script) || !fs.statSync(script).isFile()) {
+                missing = true;
+              }
+              return `"$CLAUDE_PROJECT_DIR/.claude/hooks/${name}"`;
+            },
+          );
+          // Only register commands that run a hook script we actually copied
+          if (missing || scripts === 0) continue;
+          if (known.has(command)) {
+            present++;
+            continue;
+          }
+          known.add(command);
+          fresh.push({ ...h, command });
+        }
+        if (fresh.length === 0) continue;
+        const entry = {};
+        if (group.matcher !== undefined) entry.matcher = group.matcher;
+        entry.hooks = fresh;
+        if (!settings.hooks) settings.hooks = {};
+        if (!settings.hooks[event]) settings.hooks[event] = [];
+        settings.hooks[event].push(entry);
+        added += fresh.length;
+      }
+    }
+
+    if (added > 0) {
+      fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + "\n");
+    }
+    return { added, present, error: null };
+  } catch (err) {
+    return { added: 0, present: 0, error: err.message };
+  }
 }
 
 /**
@@ -211,4 +357,4 @@ function countDirs(dir) {
   }
 }
 
-module.exports = { install };
+module.exports = { install, registerHooks };

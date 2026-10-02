@@ -162,8 +162,8 @@ const result = await api.method(params);
    - Cross-references
 
 4. **Verify Examples**
-   - Run all code snippets
-   - Test on fresh environment
+   - Check every code snippet against the source it documents
+   - You have no shell: if a snippet must be executed to be trusted, say so and ask the caller to run it
    - Include expected output
 
 ## Anti-Patterns to Avoid

@@ -6,10 +6,10 @@ argument-hint: "[file path or function name]"
 
 ## Context
 
-- Recently modified files: !`git diff --name-only HEAD~3 2>/dev/null | grep -E '\.(ts|tsx|js|jsx|py|go|rs)$' | head -10 || echo "No recent changes"`
-- Test framework detection: !`cat package.json 2>/dev/null | grep -E '"(jest|vitest|mocha)"' | head -1 || ls pytest.ini pyproject.toml 2>/dev/null | head -1 || echo "Unknown test framework"`
-- Existing test files: !`find . -name "*test*" -o -name "*spec*" 2>/dev/null | grep -E '\.(ts|tsx|js|jsx|py|go)$' | head -10 || echo "No test files found"`
-- Test directory structure: !`ls -la tests/ test/ __tests__/ spec/ 2>/dev/null | head -20 || echo "No standard test directory"`
+- Recently modified files: !`git diff --name-only HEAD~3 2>/dev/null | head -10`
+- Project root files (infer the test framework from these): !`ls -a`
+- Existing test files: !`git ls-files 2>/dev/null | grep -i -e test -e spec | head -10`
+- Test directory structure: !`ls -la tests/ test/ __tests__/ spec/ 2>/dev/null | head -20`
 
 ## Task
 

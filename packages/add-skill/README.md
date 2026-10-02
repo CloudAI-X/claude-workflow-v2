@@ -26,6 +26,8 @@ That's it. Run `claude` to start.
 └── hooks/       # 14 automation scripts
 ```
 
+Hook scripts are copied into `.claude/hooks/` and registered in `.claude/settings.json` (existing files and settings are kept). Commands are not namespaced (`/commit` instead of `/project-starter:commit`), and `permissionMode: acceptEdits` on the debugger, docs-writer, refactorer and test-architect agents takes effect.
+
 ## Features
 
 - **Additive install** - Preserves your existing `.claude/` files

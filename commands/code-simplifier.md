@@ -77,22 +77,21 @@ For each finding, present:
 **Current** (X lines):
 ```[lang]
 [code block]
-````
+```
 
 **Simplified** (Y lines):
-
 ```[lang]
 [code block]
 ```
 
 **Benefit**: [Why this is better]
 **Risk**: Low - behavior unchanged
-
-```
+````
 
 ## Phase 4: Apply Simplifications
 
 After user approval:
+
 1. Make one change at a time
 2. Run tests after each change
 3. Commit with clear message: `refactor: simplify [description]`
@@ -101,7 +100,6 @@ After user approval:
 ## Output Format
 
 ```
-
 ## Simplification Report
 
 ### Changes Analyzed
@@ -129,7 +127,6 @@ After user approval:
 ### Tests to Run After
 
 - [List of test commands to verify no behavior change]
-
 ```
 
 ## Safety Rules
@@ -143,4 +140,3 @@ After user approval:
 ## Usage
 
 This command ships with the project-starter plugin. Invoke with: `/project-starter:code-simplifier`
-```

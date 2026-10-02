@@ -23,6 +23,7 @@ PROTECTED_PATTERNS_WITH_REASONS = [
     ('.env', ".env files contain secrets — edit manually outside of Claude Code"),
     ('.env.local', ".env files contain secrets — edit manually outside of Claude Code"),
     ('.env.production', ".env files contain secrets — edit manually outside of Claude Code"),
+    ('.env.*', ".env files contain secrets — edit manually outside of Claude Code"),
     ('**/secrets/*', "Secrets directory contains sensitive data — manage outside of Claude Code"),
     ('**/credentials/*', "Credentials directory contains sensitive data — manage outside of Claude Code"),
 
@@ -47,17 +48,26 @@ WARN_PATTERNS = [
     '**/production/*',
 ]
 
+# Env templates hold placeholders, not secrets — never block these
+UNPROTECTED_BASENAMES = {'.env.example', '.env.template', '.env.sample'}
+
 def matches_pattern(file_path, patterns):
     """Check if file matches any protected pattern."""
+    file_path = file_path.replace('\\', '/')
     # Strip a single leading "./" prefix. Do NOT use lstrip('./') — it treats
     # './' as a character set and would eat leading dots, turning ".env" into
     # "env" and silently defeating dotfile protection.
     if file_path.startswith('./'):
         file_path = file_path[2:]
+    if os.path.basename(file_path) in UNPROTECTED_BASENAMES:
+        return None
+    # Claude Code sends absolute paths, so also try every trailing sub-path:
+    # "/repo/.git/config" has to match the relative pattern ".git/*", and the
+    # last sub-path is the basename.
+    parts = [p for p in file_path.split('/') if p]
+    candidates = [file_path] + ['/'.join(parts[i:]) for i in range(len(parts))]
     for pattern in patterns:
-        if fnmatch.fnmatch(file_path, pattern):
-            return pattern
-        if fnmatch.fnmatch(os.path.basename(file_path), pattern):
+        if any(fnmatch.fnmatch(c, pattern) for c in candidates):
             return pattern
     return None
 
@@ -88,9 +98,17 @@ def main():
         # Check for warning patterns
         warned = matches_pattern(file_path, WARN_PATTERNS)
         if warned:
-            print(f"⚠️ WARNING: Editing sensitive file: {file_path}")
-            print(f"   Matches pattern: {warned}")
-            # Don't block, just warn
+            # Don't block, just warn. Plain stdout on exit 0 only reaches the
+            # debug log, so pass the warning to Claude as additionalContext.
+            print(json.dumps({
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "additionalContext": (
+                        f"WARNING: editing sensitive file {file_path} "
+                        f"(matches pattern: {warned}). Double-check this change is intended."
+                    ),
+                }
+            }))
             sys.exit(0)
             
     except Exception:

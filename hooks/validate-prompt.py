@@ -12,7 +12,7 @@ AGENT_HINTS = {
     r"\b(review|check|look at)\b.*\b(code|changes|pr|pull request)\b": "Tip: Consider using the code-reviewer agent for thorough code reviews.",
     r"\b(bug|error|crash|fail|broken)\b": "Tip: The debugger agent specializes in systematic root cause analysis.",
     r"\b(test|coverage|spec)\b": "Tip: The test-architect agent can help design comprehensive test strategies.",
-    r"\b(security|auth|vulnerab|owasp)\b": "Tip: The security-auditor agent can perform OWASP Top 10 checks.",
+    r"\b(security|auth|vulnerab\w*|owasp)\b": "Tip: The security-auditor agent can perform OWASP Top 10 checks.",
     r"\b(refactor|clean|improve|simplify)\b.*\b(code)\b": "Tip: The refactorer agent specializes in code structure improvements.",
     r"\b(document|readme|api docs)\b": "Tip: The docs-writer agent creates clear technical documentation.",
 }

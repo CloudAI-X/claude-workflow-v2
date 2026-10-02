@@ -82,11 +82,17 @@ def main():
         issues = check_content(content)
 
         if issues:
-            print("Quality check - issues detected:")
-            for issue in issues:
-                print(f"  - {issue}")
-            print("\nConsider resolving before committing.")
-            # Exit 0 - warn but don't block edits
+            lines = ["Quality check - issues detected:"]
+            lines += [f"  - {issue}" for issue in issues]
+            lines.append("Consider resolving before committing.")
+            # Exit 0 - warn but don't block edits. Plain stdout on exit 0 only
+            # reaches the debug log, so pass the warning as additionalContext.
+            print(json.dumps({
+                "hookSpecificOutput": {
+                    "hookEventName": "PreToolUse",
+                    "additionalContext": "\n".join(lines),
+                }
+            }))
             sys.exit(0)
 
     except Exception:

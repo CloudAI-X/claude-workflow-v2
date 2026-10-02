@@ -31,7 +31,7 @@ DevOps Setup Progress:
 
 ```dockerfile
 # WRONG: Single stage, bloated image
-FROM node:20
+FROM node:22
 WORKDIR /app
 COPY . .
 RUN npm install
@@ -40,14 +40,15 @@ CMD ["node", "dist/index.js"]
 # Result: 1.2GB image with devDependencies and source code
 
 # CORRECT: Multi-stage build
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
 RUN npm run build
+RUN npm prune --omit=dev
 
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 RUN addgroup -g 1001 appgroup && adduser -u 1001 -G appgroup -s /bin/sh -D appuser
@@ -67,8 +68,9 @@ FROM python:3.12-slim AS builder
 WORKDIR /app
 RUN pip install uv
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --no-install-project
 COPY . .
+RUN uv sync --frozen --no-dev
 
 FROM python:3.12-slim AS runner
 WORKDIR /app
@@ -112,7 +114,7 @@ __pycache__
 
 ```dockerfile
 # Always pin versions
-FROM node:20.11.0-alpine   # NOT node:latest
+FROM node:22-alpine   # NOT node:latest
 
 # Don't run as root
 USER appuser
@@ -144,7 +146,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
       - run: npm ci
       - run: npm run lint
@@ -157,6 +159,7 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_DB: testdb
+          POSTGRES_PASSWORD: postgres
         ports: ["5432:5432"]
         options: >-
           --health-cmd pg_isready
@@ -167,7 +170,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: "npm"
       - run: npm ci
       - run: npm test
@@ -175,13 +178,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     needs: test
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: type=sha
       - uses: docker/build-push-action@v5
         with:
           push: ${{ github.event_name == 'push' }}
-          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -286,6 +302,7 @@ terraform {
     bucket = "myapp-terraform-state"
     key    = "prod/terraform.tfstate"
     region = "us-east-1"
+    use_lockfile = true
   }
 }
 
@@ -300,6 +317,10 @@ resource "aws_instance" "web" {
 }
 
 # variables.tf
+variable "ami_id" {
+  type = string
+}
+
 variable "environment" {
   type    = string
   default = "dev"
@@ -413,6 +434,7 @@ services:
     image: postgres:16
     environment:
       POSTGRES_DB: myapp
+      POSTGRES_PASSWORD: postgres
     healthcheck:
       test: ["CMD-SHELL", "pg_isready"]
       interval: 5s
@@ -445,7 +467,7 @@ API_KEY=your-key-here
 ```
 AVOID                              DO INSTEAD
 -------------------------------------------------------------------
-FROM node:latest                   Pin exact versions (node:20.11.0-alpine)
+FROM node:latest                   Pin versions (node:22-alpine)
 Running as root in container       Create and use non-root user
 No .dockerignore                   Exclude .git, node_modules, .env
 Single CI job does everything      Separate lint, test, build, deploy stages

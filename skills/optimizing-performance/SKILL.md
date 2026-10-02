@@ -98,6 +98,9 @@ const processed = useMemo(() => expensiveCalc(data), [data]);
   src="image.webp"
   srcset="image-300.webp 300w, image-600.webp 600w"
   sizes="(max-width: 600px) 300px, 600px"
+  width="600"
+  height="400"
+  alt="Description"
   loading="lazy"
   decoding="async"
 />
@@ -114,12 +117,12 @@ SELECT * FROM users;
 SELECT * FROM orders WHERE user_id = ?;
 
 -- ✅ Single query with JOIN
-SELECT u.*, o.*
+SELECT u.id, u.name, o.id AS order_id, o.total
 FROM users u
 LEFT JOIN orders o ON u.id = o.user_id;
 
 -- ✅ Or use pagination
-SELECT * FROM users LIMIT 100 OFFSET 0;
+SELECT id, name FROM users WHERE id > :last_id ORDER BY id LIMIT 100;
 ```
 
 **Caching Strategy:**
@@ -134,8 +137,9 @@ const getUser = async (id) => {
   // L2: Redis cache (fast)
   user = await redis.get(`user:${id}`);
   if (user) {
+    user = JSON.parse(user);
     memoryCache.set(`user:${id}`, user, 60);
-    return JSON.parse(user);
+    return user;
   }
 
   // L3: Database (slow)
@@ -159,7 +163,7 @@ app.post("/upload", async (req, res) => {
 // ✅ Queue for background processing
 app.post("/upload", async (req, res) => {
   const jobId = await queue.add("processVideo", { file: req.file });
-  res.send({ jobId, status: "processing" });
+  res.status(202).send({ jobId, status: "processing" });
 });
 ```
 

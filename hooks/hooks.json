@@ -6,15 +6,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/protect-files.py"
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/protect-files.py\""
           },
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/security-check.py"
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/security-check.py\""
           },
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/pre-commit-check.py"
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/pre-commit-check.py\""
           }
         ]
       },
@@ -23,11 +23,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/log-commands.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/log-commands.sh\""
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/branch-protection.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/branch-protection.sh\""
           }
         ]
       }
@@ -38,11 +38,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/format-on-edit.py"
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/format-on-edit.py\""
           },
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/typescript-check.py"
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/typescript-check.py\""
           }
         ]
       }
@@ -53,7 +53,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/notify-input.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/notify-input.sh\""
           }
         ]
       }
@@ -64,19 +64,19 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/verify-on-complete.py"
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/verify-on-complete.py\""
           },
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/suggest-doc-updates.py"
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/suggest-doc-updates.py\""
           },
           {
             "type": "command",
-            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/notify-complete.sh"
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/notify-complete.sh\""
           },
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/track-metrics.py"
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/track-metrics.py\""
           }
         ]
       }
@@ -87,7 +87,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/validate-environment.py"
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-environment.py\""
           }
         ]
       }
@@ -98,7 +98,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/validate-prompt.py"
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-prompt.py\""
           }
         ]
       }

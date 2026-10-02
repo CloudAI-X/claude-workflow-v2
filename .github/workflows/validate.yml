@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Validate JSON syntax
         run: |
@@ -35,28 +35,29 @@ jobs:
           fi
           echo "All JSON files are valid."
 
-      - name: Validate Codex hook script references
+      - name: Validate hook script references
         run: |
-          echo "=== Checking Codex hook script references ==="
+          echo "=== Checking hook script references (hooks/hooks.json, .codex/hooks.json) ==="
           errors=0
           scripts=$(python3 -c "
           import json
           import re
-          with open('.codex/hooks.json') as f:
-              data = json.load(f)
-          for event_hooks in data.get('hooks', {}).values():
-              for group in event_hooks:
-                  for hook in group.get('hooks', []):
-                      cmd = hook.get('command', '')
-                      for match in re.findall(r'/hooks/([^\"\\s]+\\.(?:py|sh))', cmd):
-                          print(f'hooks/{match}')
-          ")
+          for path in ('hooks/hooks.json', '.codex/hooks.json'):
+              with open(path) as f:
+                  data = json.load(f)
+              for event_hooks in data.get('hooks', {}).values():
+                  for group in event_hooks:
+                      for hook in group.get('hooks', []):
+                          cmd = hook.get('command', '')
+                          for match in re.findall(r'/hooks/([^\"\\s]+\\.(?:py|sh))', cmd):
+                              print(f'hooks/{match}')
+          " | sort -u)
 
           for script in $scripts; do
             if [ -f "$script" ]; then
               echo "  OK: $script exists"
             else
-              echo "  FAIL: $script not found (referenced in .codex/hooks.json)"
+              echo "  FAIL: $script not found (referenced in a hooks.json)"
               errors=$((errors + 1))
             fi
           done
@@ -155,6 +156,48 @@ jobs:
               sys.exit(1)
           PY
 
+      - name: Check frontmatter value types
+        run: |
+          echo "=== Checking argument-hint values are quoted strings ==="
+          # A bare [..] is a YAML flow sequence (or a parse error with trailing
+          # text), which strict loaders reject and drop the command for.
+          if grep -rnE '^argument-hint:[[:space:]]*\[' commands skills agents; then
+            echo "::error::argument-hint must be a quoted string, e.g. argument-hint: \"[file]\""
+            exit 1
+          fi
+          echo "All argument-hint values are strings."
+
+      - name: Check version consistency
+        run: |
+          echo "=== Checking version consistency ==="
+          python3 - <<'PY'
+          import json
+          import re
+          import sys
+          from pathlib import Path
+
+          def load(path):
+              return json.loads(Path(path).read_text(encoding="utf-8"))
+
+          marketplace = load(".claude-plugin/marketplace.json")
+          versions = {
+              ".claude-plugin/plugin.json": load(".claude-plugin/plugin.json")["version"],
+              ".claude-plugin/marketplace.json (metadata)": marketplace["metadata"]["version"],
+              ".claude-plugin/marketplace.json (plugin entry)": marketplace["plugins"][0]["version"],
+              ".codex-plugin/plugin.json": load(".codex-plugin/plugin.json")["version"],
+              "packages/add-skill/package.json": load("packages/add-skill/package.json")["version"],
+          }
+          changelog = re.search(r"^## \[(\d+\.\d+\.\d+)\]", Path("CHANGELOG.md").read_text(encoding="utf-8"), re.M)
+          versions["CHANGELOG.md (latest release)"] = changelog.group(1) if changelog else "missing"
+
+          for name, version in versions.items():
+              print(f"  {version}  {name}")
+          if len(set(versions.values())) != 1:
+              print("::error::version mismatch across manifests")
+              sys.exit(1)
+          print("All versions agree.")
+          PY
+
       - name: Validate skill frontmatter
         run: |
           echo "=== Validating skill YAML frontmatter ==="
@@ -245,9 +288,11 @@ jobs:
           echo ""
           echo "Checks performed:"
           echo "  1. JSON syntax validation"
-          echo "  2. Codex hook script reference validation"
+          echo "  2. Hook script reference validation (Claude Code + Codex)"
           echo "  3. Python hook syntax check"
           echo "  4. Bash hook syntax check"
           echo "  5. Codex agent TOML + registration validation"
-          echo "  6. Skill frontmatter validation (name, description)"
-          echo "  7. Codex plugin manifest reference validation"
+          echo "  6. Frontmatter value types (argument-hint)"
+          echo "  7. Version consistency across manifests and CHANGELOG"
+          echo "  8. Skill frontmatter validation (name, description)"
+          echo "  9. Codex plugin manifest reference validation"

@@ -134,7 +134,7 @@ GET    /users?page=2&limit=20&sort=-createdAt
 **Header Versioning:**
 
 ```
-Accept: application/vnd.api+json; version=1
+Accept: application/vnd.example.v1+json
 ```
 
 ## Authentication Patterns
@@ -165,6 +165,7 @@ Retry-After: 60
 **Schema Design:**
 
 ```graphql
+# Abbreviated: input, connection and error types omitted for brevity
 type Query {
   user(id: ID!): User
   users(filter: UserFilter, pagination: Pagination): UserConnection!

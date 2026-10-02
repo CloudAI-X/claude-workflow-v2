@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
 Agent telemetry hook.
-Logs session metrics (duration, tools used, task outcome) on Stop event.
-Writes to .claude/agent-metrics.jsonl. Informational only.
+On each Stop event (once per turn) appends one JSON line with a timestamp, the
+number of changed files and the latest commit to .claude/agent-metrics.jsonl
+in the project. Local only, informational only.
 """
+
+from __future__ import annotations
 
 import json
 import os

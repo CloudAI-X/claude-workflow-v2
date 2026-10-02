@@ -10,7 +10,7 @@ argument-hint: "[optional scope or message hint]"
 - Git status: !`git status --short`
 - Staged changes: !`git diff --cached --stat`
 - Staged diff: !`git diff --cached`
-- Recent commits (for style reference): !`git log --oneline -5`
+- Recent commits (for style reference): !`git log --oneline -5 2>/dev/null || echo "No commits yet"`
 
 ## Task
 

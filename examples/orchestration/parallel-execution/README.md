@@ -4,7 +4,7 @@ Learn how to use parallel subagent execution for dramatic speed improvements.
 
 ## Overview
 
-Parallel execution spawns multiple subagents simultaneously using the Task tool with `run_in_background: true`. This enables N tasks to run concurrently instead of sequentially.
+Parallel execution spawns multiple subagents simultaneously using the Agent tool (`Task` in older versions) with `run_in_background: true`. This enables N tasks to run concurrently instead of sequentially.
 
 **Key Rule**: ALL Task calls MUST be in a SINGLE assistant message for true parallelism.
 
@@ -43,8 +43,8 @@ Parallel execution spawns multiple subagents simultaneously using the Task tool 
                           │
                           ▼
                   ┌───────────────┐
-                  │  TaskOutput   │
-                  │ (Collect All) │
+                  │    Results    │
+                  │ (Auto-return) │
                   └───────┬───────┘
                           │
                           ▼
@@ -89,9 +89,7 @@ run_in_background: true
 
 **Result retrieval:**
 ```
-TaskOutput: task_1_id  # src/auth findings
-TaskOutput: task_2_id  # src/api findings
-TaskOutput: task_3_id  # src/db findings
+# Results arrive automatically when each background subagent finishes (TaskOutput is deprecated)
 ```
 
 ## Example 2: Perspective-Based Parallelization
@@ -240,7 +238,7 @@ For parallel execution, multiple tasks can be marked `in_progress` simultaneousl
 ]
 ```
 
-After each TaskOutput retrieval, mark the corresponding task as `completed`.
+As each background subagent's result is delivered automatically (`TaskOutput` is deprecated), mark the corresponding task as `completed`.
 
 ## See Also
 

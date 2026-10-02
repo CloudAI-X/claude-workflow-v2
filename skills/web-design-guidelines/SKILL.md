@@ -63,8 +63,8 @@ Example: `src/Button.tsx:12 — [A11Y-01] Missing aria-label on icon button`
 
 ### PERF-02: Bundle Size
 
-- No full library imports: `import { Button } from 'lib'` not `import lib`
-- Tree-shake CSS: use CSS modules or Tailwind purge
+- No barrel imports: `import Button from 'lib/Button'` not `import { Button } from 'lib'` (or enable `optimizePackageImports`)
+- Tree-shake CSS: use CSS modules or Tailwind `content` config (v3) / automatic detection (v4)
 - Lazy load routes and heavy components: `React.lazy()` or dynamic imports
 
 ### PERF-03: Rendering
@@ -77,7 +77,7 @@ Example: `src/Button.tsx:12 — [A11Y-01] Missing aria-label on icon button`
 ### PERF-04: Core Web Vitals
 
 - **LCP** < 2.5s: Optimize largest image/text, preload critical resources
-- **FID/INP** < 200ms: No long tasks on main thread, defer non-critical JS
+- **INP** < 200ms: No long tasks on main thread, defer non-critical JS
 - **CLS** < 0.1: Set dimensions on images/embeds, no injected content above fold
 
 ## 3. Responsive Design (RD)

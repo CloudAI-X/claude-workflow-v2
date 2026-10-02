@@ -164,7 +164,7 @@ git pull
 git checkout -b feature/TICKET-123-description
 
 # Commit changes
-git add -p  # Stage interactively
+git add path/to/file  # Stage specific files (git add -p needs an interactive terminal)
 git commit -m "feat: description"
 
 # Keep up with main
@@ -172,7 +172,7 @@ git fetch origin main
 git rebase origin/main
 
 # Push and create PR
-git push -u origin HEAD
+git push -u origin HEAD  # after rebasing an already-pushed branch: git push --force-with-lease
 ```
 
 ### Fixing Mistakes
@@ -185,13 +185,15 @@ git commit --amend
 git reset --soft HEAD~1
 
 # Undo last commit (discard changes)
-git reset --hard HEAD~1
+git reset --hard HEAD~1  # also discards uncommitted changes
 
 # Revert a pushed commit
 git revert <commit-hash>
 
 # Interactive rebase to clean up
 git rebase -i HEAD~3
+# Non-interactive: git commit --fixup=<sha>, then
+GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash HEAD~3
 ```
 
 ### Advanced Operations
@@ -224,4 +226,4 @@ Commit Validation:
 - [ ] Changes are atomic (one logical change per commit)
 ```
 
-If validation fails, use `git rebase -i` to clean up commit history before pushing.
+If validation fails, use `git rebase -i` to clean up commit history (or `--fixup` + `--autosquash` when no interactive terminal is available) before pushing.

@@ -5,12 +5,31 @@ Runs tsc --noEmit after editing .ts/.tsx files.
 Informational only - never blocks operations.
 """
 import json
+import shutil
 import subprocess
 import sys
 import os
 
 
 TS_EXTENSIONS = {'.ts', '.tsx'}
+
+
+def find_tool(name, start_dir):
+    """Find a tool in the nearest node_modules/.bin, falling back to PATH.
+
+    Deliberately not `npx <name>`: outside a TTY npx silently downloads and
+    runs whatever registry package has that name (`npx tsc` fetches an
+    unrelated, deprecated "tsc" package, not TypeScript).
+    """
+    directory = os.path.abspath(start_dir)
+    while True:
+        candidate = os.path.join(directory, 'node_modules', '.bin', name)
+        if os.path.exists(candidate):
+            return candidate
+        parent = os.path.dirname(directory)
+        if parent == directory:
+            return shutil.which(name)
+        directory = parent
 
 
 def find_tsconfig(file_path):
@@ -42,9 +61,13 @@ def main():
 
         project_dir = os.path.dirname(tsconfig)
 
+        tsc = find_tool('tsc', project_dir)
+        if not tsc:
+            sys.exit(0)
+
         try:
             result = subprocess.run(
-                ['npx', 'tsc', '--noEmit', '--pretty'],
+                [tsc, '--noEmit', '--pretty', 'false'],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -52,12 +75,22 @@ def main():
             )
 
             if result.returncode != 0 and result.stdout:
-                print("TypeScript errors found — fix these before committing to maintain type safety:")
-                print(f"  File edited: {os.path.basename(file_path)}")
-                print(result.stdout[:2000])
+                message = (
+                    "TypeScript errors found — fix these before committing to maintain type safety:\n"
+                    f"  File edited: {os.path.basename(file_path)}\n"
+                    f"{result.stdout[:2000]}\n"
+                )
                 if len(result.stdout) > 2000:
-                    print("  ... (truncated)")
-                print("Run 'npx tsc --noEmit' locally to see full error output.")
+                    message += "  ... (truncated)\n"
+                message += "Run 'npx tsc --noEmit' locally to see full error output."
+                # Plain stdout on exit 0 only reaches the debug log, so hand
+                # the errors to Claude as additionalContext.
+                print(json.dumps({
+                    "hookSpecificOutput": {
+                        "hookEventName": "PostToolUse",
+                        "additionalContext": message,
+                    }
+                }))
 
         except (FileNotFoundError, subprocess.TimeoutExpired):
             pass
