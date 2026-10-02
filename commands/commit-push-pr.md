@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash(git:*), Bash(gh:*)
 description: Commit staged changes, push to remote, and create a pull request
-argument-hint: [optional PR title or description hint]
+argument-hint: "[optional PR title or description hint]"
 ---
 
 ## Context

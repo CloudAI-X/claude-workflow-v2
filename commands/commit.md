@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash(git status:*), Bash(git diff:*), Bash(git add:*), Bash(git commit:*)
 description: Create a conventional commit with auto-generated message
-argument-hint: [optional scope or message hint]
+argument-hint: "[optional scope or message hint]"
 ---
 
 ## Context

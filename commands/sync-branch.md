@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash(git:*)
 description: Sync current branch with main/master (fetch, rebase or merge)
-argument-hint: [merge|rebase] (default: rebase)
+argument-hint: "[merge|rebase] (default: rebase)"
 ---
 
 ## Context

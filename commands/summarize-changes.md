@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash(git:*)
 description: Summarize recent changes for standup, PR, or documentation
-argument-hint: [today|week|branch|pr] (default: today)
+argument-hint: "[today|week|branch|pr] (default: today)"
 ---
 
 ## Context

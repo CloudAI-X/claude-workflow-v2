@@ -1,7 +1,7 @@
 ---
 allowed-tools: Bash(git:*), Bash(npm:*), Bash(npx:*), Bash(yarn:*), Bash(pnpm:*), Bash(bun:*), Bash(pytest:*), Bash(python:*), Bash(go:*), Bash(cargo:*), Read, Write, Edit, Glob, Grep
 description: Systematic, safety-first refactoring with verification at each step. Never refactors and adds features simultaneously.
-argument-hint: [target file, directory, or refactoring description]
+argument-hint: "[target file, directory, or refactoring description]"
 ---
 
 # Guided Refactoring
