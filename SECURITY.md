@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-If you discover a security issue in the plugin surfaces shipped by this repository (Claude Code or Codex), please open a GitHub issue with the `[security]` label or contact the maintainers through the repository owner profile.
+If you discover a security issue in the plugin surfaces shipped by this repository (Claude Code or Codex), please report it privately through [GitHub's private vulnerability reporting](https://github.com/CloudAI-X/claude-workflow-v2/security/advisories/new) (Security → Report a vulnerability). Please do not open a public issue for an undisclosed vulnerability.
 
 ## Scope
 
